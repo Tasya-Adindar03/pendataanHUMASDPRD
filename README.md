@@ -25,13 +25,25 @@ docker compose up -d
 docker compose exec app php artisan migrate
 ```
 
-Open <http://localhost:8000>. Mail sent by the application appears in Mailpit at <http://localhost:8025>. The database seeder is currently empty; enter companies, media, and advertising plans through the application.
+Open <http://localhost:8000>. Mail sent by the application appears in Mailpit at <http://localhost:8025>. To populate the app with sample data, follow the demo data instructions below.
 
 Compose supplies the internal database hostname `db` and mail hostname `mailpit`. The database is not exposed to the host. Set `DB_DATABASE`, `DB_USERNAME` (a non-root user), `DB_PASSWORD`, and `DB_ROOT_PASSWORD` in `.env` before the first startup if you want different credentials. The defaults are for local use. MySQL initializes these credentials only when its data volume is empty.
 
 To change ports, set `APP_PORT` and `MAILPIT_PORT` in `.env`; also update `APP_URL` to match the app port. After changing `.env`, run `docker compose up -d --force-recreate app`.
 
 Uploads and database data persist in named Docker volumes. The entrypoint creates the public storage link. Keep the same application key across restarts.
+
+## Demo data (six months)
+
+After migrating, populate the six most recent months (including the current month):
+
+```sh
+docker compose exec app php artisan db:seed
+```
+
+The local/testing seeder creates 6 demo users, 24 companies, 12 media outlets (6 print and 6 online), 144 monthly advertising plans, and approximately 430 advertorials. All payment statuses, six monthly chart periods, top companies, and current-month plan progress receive data. Demo users have random passwords and are used as transaction authors.
+
+Running it again in the same month updates demo invoices without duplicating them. Existing non-demo transactions are preserved. As the calendar advances, a later run adds the new month and retains older data. `DatabaseSeeder` only loads demo data in `local` or `testing` environments. No database reset is required.
 
 ## Development and dependencies
 
