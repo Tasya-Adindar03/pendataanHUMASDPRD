@@ -37,6 +37,15 @@ class DashboardTwoTest extends TestCase
                 $this->assertEquals([0, 4000000], $data['type']);
                 return true;
             })->assertSee('September 2026')->assertSee('value="2026-09"', false);
+        $this->get('/dashboard-2?bulan=2026-09&tipe=cetak')->assertOk()
+            ->assertViewHas('total', 0)->assertViewHas('quota', 0);
+        $this->get('/dashboard-2?bulan=2026-09&status=belum_dibayar&hari=10&aging=1')->assertOk()
+            ->assertViewHas('total', 3000000)->assertViewHas('count', 1)
+            ->assertViewHas('growth', null)->assertViewHas('quota', 1)
+            ->assertViewHas('detailRows', fn ($rows) => $rows->first()->no_invoice === 'SEP-2');
+        $this->get('/dashboard-2?bulan=2026-09&company_id=999999')->assertOk()->assertViewHas('total', 0);
+        $this->get('/dashboard-2?bulan=2026-09&aging=0')->assertOk()->assertViewHas('count', 0);
+        $this->getJson('/dashboard-2?status=invalid&aging=9')->assertUnprocessable()->assertJsonValidationErrors(['status', 'aging']);
         $this->travelBack();
     }
 

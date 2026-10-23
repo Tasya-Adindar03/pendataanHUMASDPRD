@@ -38,7 +38,7 @@ Uploads and database data persist in named Docker volumes. The entrypoint create
 - `/dashboard`: compact overview of the six most recent months.
 - `/dashboard-2`: monthly analytics with a month picker (`?bulan=2026-09`), nine visualizations, and collection insights. The sidebar includes a separate Dashboard 2 menu.
 
-Dashboard 2 groups advertorials by receipt date. Payment status and overdue balances reflect the current state, rather than a historical month-end snapshot. Current-month comparisons are provisional. Plan fulfillment follows the selected plan month and caps contribution at each plan's quota. Charts use the existing Chart.js CDN; summaries and calendar links remain available if it cannot load.
+Dashboard 2 groups advertorials by receipt date. Payment status and overdue balances reflect the current state, rather than a historical month-end snapshot. Current-month comparisons are provisional. Plan fulfillment follows the selected plan month and caps contribution at each plan's quota. Click chart segments or calendar dates to apply linked filters without leaving the dashboard; remove individual focus chips or use Reset. Charts can be expanded and downloaded as PNG. Detail opens a table of up to 50 matching records with CSV export. Fullscreen mode and a collection simulation slider are available; simulations never change transactions. Plan quota metrics follow month/company/media filters and intentionally ignore payment-status/day/aging filters. Charts use the existing Chart.js CDN; summaries and calendar links remain available if it cannot load.
 
 ## Demo data (six months)
 

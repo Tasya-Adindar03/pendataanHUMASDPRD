@@ -111,3 +111,43 @@
     .d2-panel-sub { font-size:7px; }
     .d2-foot { font-size:7px; }
 }
+
+/* Linked exploration controls and chart focus. */
+.d2-explore {display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 0;font-size:10px;flex-shrink:0;}
+.d2-explore button,.d2-dialog button {border:1px solid #dce5ef;background:#fff;color:#41617d;border-radius:6px;padding:5px 8px;font-size:10px;}
+.d2-segments {display:flex;gap:3px;background:#e5edf5;border-radius:8px;padding:3px;}
+.d2-segments button {border:0;background:transparent;}
+.d2-segments button[aria-pressed="true"] {background:#fff;color:#147d70;box-shadow:0 1px 4px #19375014;font-weight:700;}
+.d2-focus-tags {display:flex;gap:4px;flex:1;flex-wrap:wrap;color:#7e94a6;}
+.d2-focus-tags button {background:#e8f7f1;border-color:#b8ddcf;color:#247a65;}
+.d2-tools {display:flex;gap:4px;}
+.d2-live {font-size:10px;color:#a15a23;}
+.d2.is-loading {cursor:progress;}
+.d2.is-loading .d2-grid {opacity:.4;transition:opacity .2s;pointer-events:none;}
+.d2-panel {transition:border-color .2s,box-shadow .2s;}
+.d2-panel:hover {border-color:#b1c9dc;box-shadow:0 3px 14px #2b61710c;}
+.d2-chart-actions {display:flex;gap:3px;}
+.d2-chart-actions button {border:0;background:#f1f5f9;border-radius:4px;color:#718a9f;font-size:10px;line-height:1;padding:4px;}
+.d2-panel.is-expanded {position:fixed;inset:5vh 5vw;z-index:1050;box-shadow:0 0 0 100vmax #112638bb;display:flex;flex-direction:column;padding:24px;border-radius:18px;}
+.d2-panel.is-expanded .d2-chart,.d2-panel.is-expanded.wide .d2-chart {flex:1;height:auto;min-height:0;}
+.d2-panel.is-expanded h3 {font-size:19px;}.d2-panel.is-expanded .d2-panel-sub,.d2-panel.is-expanded .d2-foot {font-size:12px;white-space:normal;}
+.d2-panel.is-expanded .d2-plan-center b {font-size:44px;}.d2-panel.is-expanded .d2-plan-center span {font-size:14px;}
+.d2-dialog {border:1px solid #d4e0ec;border-radius:16px;padding:0;width:min(1060px,94vw);color:#29475d;box-shadow:0 25px 80px #102d4b44;}
+.d2-dialog::backdrop {background:#102638aa;backdrop-filter:blur(4px);}
+.d2-dialog header {display:flex;justify-content:space-between;align-items:center;gap:10px;padding:18px 20px;border-bottom:1px solid #edf2f7;}
+.d2-dialog h2 {font-size:17px;margin:0 0 3px;font-weight:700;}.d2-dialog p,.d2-dialog footer {font-size:11px;color:#7b8f9f;margin:0;}
+.d2-detail-scroll {max-height:65vh;overflow:auto;padding:0 20px;}.d2-dialog th {position:sticky;top:0;background:#f6f9fc;font-size:10px;padding:12px 5px;}
+.d2-dialog td {font-size:11px;padding:10px 5px;}.d2-dialog td small {display:block;color:#8798a7;font-size:10px;}.d2-dialog footer {padding:12px 20px;background:#f6f9fc;}
+.d2:fullscreen {background:#f4f6f9;padding:14px 18px;height:100dvh;overflow:auto;}
+.d2:fullscreen .d2-hero {padding:12px 18px;}.d2:fullscreen .d2-hero h2 {font-size:20px;}.d2:fullscreen .d2-hero p {display:none;}
+@media(min-width:1000px) and (min-height:650px) {
+    .d2-explore {gap:6px;font-size:8px;margin-top:5px;}
+    .d2-explore button {font-size:8px;padding:3px 6px;}
+    .d2-chart-actions button {font-size:8px;padding:3px;}
+    .d2-panel-head .d2-panel-index {display:none;}
+    .d2-grid {min-height:250px;}
+}
+.d2-simulation {display:grid;grid-template-columns:auto 1fr;column-gap:7px;align-items:center;margin-top:5px;border-top:1px solid #e6cdd4;padding-top:4px;}
+.d2-simulation label {font-size:8px;white-space:nowrap;}.d2-simulation output {font-weight:700;}
+.d2-simulation input {width:100%;height:9px;accent-color:#c16479;cursor:ew-resize;}
+.d2-simulation small {grid-column:1/-1;font-size:8px;color:#946274;line-height:1.3;}
