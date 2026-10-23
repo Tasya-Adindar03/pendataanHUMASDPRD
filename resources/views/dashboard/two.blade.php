@@ -27,7 +27,7 @@
         <div class="d2-focus-tags">
             @forelse ($focusNames as $key => $label)<button type="button" data-clear-focus="{{ $key }}" title="Hapus filter {{ $label }}">{{ $label }} ×</button>@empty<span>Klik grafik untuk memfokuskan seluruh dashboard</span>@endforelse
         </div>
-        <div class="d2-tools"><select id="d2-visual-mode" aria-label="Alternatif tampilan grafik"><option value="explore">Eksplorasi</option><option value="compare">Perbandingan</option></select><button type="button" data-reset-focus title="Hapus semua fokus"><i class="bi bi-arrow-counterclockwise"></i> Reset</button><button type="button" data-open-details><i class="bi bi-list-ul"></i> Detail</button><button type="button" data-fullscreen title="Mode layar penuh"><i class="bi bi-fullscreen"></i></button></div>
+        <div class="d2-tools"><select id="d2-visual-mode" aria-label="Alternatif tampilan grafik"><option value="strategy">Strategi · grafik baru</option><option value="explore">Eksplorasi</option><option value="compare">Perbandingan</option></select><button type="button" data-reset-focus title="Hapus semua fokus"><i class="bi bi-arrow-counterclockwise"></i> Reset</button><button type="button" data-open-details><i class="bi bi-list-ul"></i> Detail</button><button type="button" data-fullscreen title="Mode layar penuh"><i class="bi bi-fullscreen"></i></button></div>
     </div>
     <div class="d2-live" role="status" aria-live="polite"></div>
     <div class="d2-context"><span><strong>{{ $periodLabel }}</strong> · {{ $count }} advertorial · berdasarkan tanggal kwitansi{{ $current ? ' · bulan berjalan belum final' : '' }}</span><span>Status pembayaran & umur piutang dihitung saat halaman dibuka</span></div>

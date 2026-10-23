@@ -35,6 +35,8 @@ class DashboardTwoTest extends TestCase
                 $this->assertEquals(1000000, $data['daily'][29]['paid']);
                 $this->assertEquals([0, 3000000, 0, 0, 0], $data['aging']);
                 $this->assertEquals([0, 4000000], $data['type']);
+                $this->assertEquals(['count' => 2, 'total' => 4000000, 'paid' => 1000000], $data['typeProfiles'][1]);
+                $this->assertEquals(3000000, $data['media'][0]['outstanding']);
                 return true;
             })->assertSee('September 2026')->assertSee('value="2026-09"', false);
         $this->get('/dashboard-2?bulan=2026-09&tipe=cetak')->assertOk()

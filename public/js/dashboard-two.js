@@ -14,8 +14,9 @@ window.initDashboardTwo = () => {
         if (params.dari_tanggal) return window.setDashboardFocus({tanggal:params.dari_tanggal});
         window.setDashboardFocus(params);
     };
-    const compare = localStorage.getItem('d2-visual-mode') === 'compare';
-    document.getElementById('d2-visual-mode').value = compare ? 'compare' : 'explore';
+    const mode = localStorage.getItem('d2-visual-mode-v2') || 'strategy';
+    const compare = mode === 'compare';
+    document.getElementById('d2-visual-mode').value = mode;
     const charts = [];
     window.d2Charts = charts;
     Chart.defaults.font.family = 'Inter, sans-serif';
@@ -33,6 +34,8 @@ window.initDashboardTwo = () => {
     });
     function render(id, type, labels, datasets, options, hasData) {
         const panel = document.getElementById('panel-' + id);
+        panel.dataset.originalTitle ??= panel.querySelector('h3').textContent;
+        panel.querySelector('h3').textContent = panel.dataset.originalTitle;
         panel.dataset.originalSub ??= panel.querySelector('.d2-panel-sub').textContent;
         panel.dataset.originalFoot ??= panel.querySelector('.d2-foot').textContent;
         panel.querySelector('.d2-panel-sub').textContent = panel.dataset.originalSub;
@@ -80,8 +83,55 @@ window.initDashboardTwo = () => {
                 caption('Bullet bar: slot terpenuhi dibanding sisa kuota');
             }
         }
+        if(mode === 'strategy') {
+            const title = text => {panel.querySelector('h3').textContent=text;};
+            if(id === 'daily') {
+                type='bar';title('Ritme volume & nilai');
+                datasets=[{type:'bar',label:'Nilai publikasi',data:d.daily.map(row=>row.value),backgroundColor:'#739bf0',borderRadius:2,yAxisID:'y'}, {type:'line',label:'Jumlah publikasi',data:d.daily.map(row=>row.count),borderColor:'#e09942',backgroundColor:'#e09942',pointRadius:1,borderWidth:2,yAxisID:'volume',tension:.2}];
+                options.scales.volume={position:'right',beginAtZero:true,grid:{display:false},ticks:{precision:0,maxTicksLimit:4},title:{display:true,text:'Jumlah',font:{size:8}}};
+                options.plugins.tooltip.callbacks.label=c=>c.dataset.label+': '+(c.dataset.yAxisID==='volume'?c.raw+' publikasi':money(c.raw));
+                caption('Batang: nilai (Rp jt) · garis: jumlah publikasi (sumbu kanan)');
+                panel.querySelector('.d2-foot').textContent='Lihat apakah perubahan nilai diikuti perubahan volume. Klik tanggal untuk fokus.';
+            } else if(id === 'status') {
+                type='bar';title('Porsi nilai pembayaran');labels=['Komposisi'];
+                datasets=['Lunas','Belum dibayar','Jatuh tempo'].map((name,i)=>({label:name,data:[d.total>0?d.status[i]/d.total*100:0],backgroundColor:[mint,'#e8b45a',red][i]}));
+                options=horizontal();options.scales.x.max=100;options.scales.x.stacked=true;options.scales.y.stacked=true;options.scales.x.ticks={callback:v=>v+'%'};options.plugins.legend=legend;
+                options.plugins.tooltip.callbacks.label=c=>c.dataset.label+': '+c.raw.toFixed(1)+'% · '+money(d.status[c.datasetIndex]);
+                clickable(options,p=>jump({status:['sudah_dibayar','belum_dibayar','jatuh_tempo'][p.datasetIndex]}));caption('100% nilai periode · proporsi status tersimpan');
+            } else if(id === 'type') {
+                type='radar';title('Radar kontribusi kanal');labels=['Volume','Nilai','Lunas'];
+                const fields=['count','total','paid'];
+                datasets=['Cetak','Online'].map((name,i)=>({label:name,data:fields.map(field=>{const sum=d.typeProfiles.reduce((s,row)=>s+row[field],0);return sum>0?d.typeProfiles[i][field]/sum*100:0;}),borderColor:[violet,blue][i],backgroundColor:['rgba(139,115,219,.18)','rgba(84,137,237,.15)'][i],borderWidth:2,pointRadius:2}));
+                options=base();options.scales={r:{min:0,max:100,ticks:{display:false,stepSize:25},pointLabels:{font:{size:9}},grid:{color:'#e4eaf2'}}};options.plugins.legend=legend;
+                options.plugins.tooltip.callbacks.label=c=>c.dataset.label+': '+c.raw.toFixed(1)+'%';
+                clickable(options,p=>jump({tipe:['cetak','online'][p.datasetIndex]}));caption('Porsi tiap kanal pada volume, nilai, dan nilai lunas · %');
+                panel.querySelector('.d2-foot').textContent='Setiap sumbu berbagi 100% antara kanal. Bukan skor kualitas media.';
+            } else if(id === 'bubble') {
+                type='scatter';title('Matriks prioritas media');
+                datasets=[{label:'Media',data:d.media.map(row=>({x:row.count,y:row.total>0?row.outstanding/row.total*100:0,name:row.name,id:row.id,outstanding:row.outstanding})),pointRadius:6,pointHoverRadius:9,backgroundColor:d.media.map(row=>row.total>0&&row.outstanding/row.total>.5?red:mint)}];
+                options=base();options.scales.x={beginAtZero:true,grid,border:{display:false},ticks:{precision:0,maxTicksLimit:5},title:{display:true,text:'Jumlah publikasi',font:{size:8}}};
+                options.scales.y={min:0,max:100,grid,ticks:{callback:v=>v+'%',maxTicksLimit:4},title:{display:true,text:'Belum lunas',font:{size:8}}};
+                options.plugins.tooltip.callbacks={title:items=>items[0].raw.name,label:c=>[c.raw.x+' publikasi · '+c.raw.y.toFixed(1)+'% belum lunas',money(c.raw.outstanding)+' saldo']};
+                clickable(options,p=>jump({media_id:d.media[p.index].id}));caption('X: volume · Y: porsi nilai belum lunas · klik titik untuk fokus');
+                panel.querySelector('.d2-foot').textContent='Kanan atas: volume besar dan porsi piutang tinggi. Warna merah = lebih dari 50% belum lunas.';
+            } else if(id === 'companies') {
+                type='bar';title('Pareto konsentrasi nilai');let cumulative=0;
+                datasets=[{type:'bar',label:'Nilai perusahaan',data:d.companies.map(row=>row.total),backgroundColor:violet,borderRadius:3,yAxisID:'y'}, {type:'line',label:'Porsi kumulatif',data:d.companies.map(row=>{cumulative+=row.total;return d.total>0?cumulative/d.total*100:0;}),borderColor:'#e09942',backgroundColor:'#e09942',borderWidth:2,pointRadius:3,yAxisID:'share'}];
+                options=base();options.scales.share={position:'right',min:0,max:100,grid:{display:false},ticks:{callback:v=>v+'%',maxTicksLimit:4}};
+                options.scales.x.ticks={font:{size:8},maxRotation:0,callback:function(v){const label=this.getLabelForValue(v);return label.length>12?'…'+label.slice(-11):label;}};
+                options.plugins.tooltip.callbacks.label=c=>c.dataset.yAxisID==='share'?'Kumulatif: '+c.raw.toFixed(1)+'%':money(c.raw);
+                options.plugins.legend=legend;clickable(options,p=>jump({company_id:d.companies[p.index].id}));caption('Batang: nilai · garis: porsi kumulatif terhadap seluruh periode');
+                panel.querySelector('.d2-foot').textContent='Lima perusahaan terbesar. Garis tidak harus mencapai 100% jika masih ada perusahaan lain.';
+            } else if(id === 'flow') {
+                type='bar';title('Lunas vs piutang per kanal');labels=['Cetak','Online'];
+                datasets=[{label:'Lunas',data:d.typeProfiles.map(row=>row.paid),backgroundColor:mint,borderRadius:3},{label:'Belum lunas',data:d.typeProfiles.map(row=>Math.max(0,row.total-row.paid)),backgroundColor:red,borderRadius:3}];
+                options=base();options.plugins.legend=legend;clickable(options,p=>jump({tipe:['cetak','online'][p.index]}));caption('Grouped bar · bandingkan saldo pada skala rupiah yang sama');
+                panel.querySelector('.d2-foot').textContent='Pilih kanal dengan selisih lunas dan piutang terbesar untuk ditelusuri.';
+            }
+        }
         if(id === 'plans') panel.querySelector('.d2-plan-center').style.display=compare?'none':'';
         panel.querySelectorAll('.d2-chart-actions').forEach(el=>el.remove());
+        document.getElementById('d2-' + id).setAttribute('aria-label', panel.querySelector('h3').textContent + '. ' + panel.querySelector('.d2-panel-sub').textContent);
         document.getElementById('panel-' + id).classList.toggle('empty', !hasData);
         charts.push(new Chart(document.getElementById('d2-' + id), {type, data:{labels,datasets}, options}));
         const head = document.querySelector('#panel-' + id + ' .d2-panel-head');
@@ -290,7 +340,7 @@ window.initDashboardTwo = () => {
     });
     document.addEventListener('change', event => {
         if(event.target.id !== 'd2-visual-mode') return;
-        localStorage.setItem('d2-visual-mode',event.target.value);
+        localStorage.setItem('d2-visual-mode-v2',event.target.value);
         window.initDashboardTwo();
     });
     document.addEventListener('input', event => {

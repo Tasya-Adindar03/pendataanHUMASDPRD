@@ -90,6 +90,7 @@ class DashboardTwoController extends Controller
             'count' => $group->count(),
             'total' => (float) $group->sum('nominal'),
             'average' => (float) $group->avg('nominal'),
+            'outstanding' => (float) $group->whereIn('status', ['belum_dibayar', 'jatuh_tempo'])->sum('nominal'),
         ])->values()->all();
         $typeValues = array_map(fn ($type) => (float) $rows->filter(fn ($row) => optional($row->media)->tipe === $type)->sum('nominal'), ['cetak', 'online']);
         $aging = [0, 0, 0, 0, 0];
@@ -119,6 +120,10 @@ class DashboardTwoController extends Controller
             'media' => $media, 'type' => $typeValues, 'aging' => $aging,
             'total' => $total, 'paid' => $paid, 'outstanding' => $outstanding,
             'quota' => $quota, 'realized' => $realized, 'monthCount' => $monthCount,
+            'typeProfiles' => array_map(function ($type) use ($rows) {
+                $group = $rows->filter(fn ($row) => optional($row->media)->tipe === $type);
+                return ['count' => $group->count(), 'total' => (float) $group->sum('nominal'), 'paid' => (float) $group->where('status', 'sudah_dibayar')->sum('nominal')];
+            }, ['cetak', 'online']),
         ];
 
         $focus = $request->only(['tipe', 'status', 'company_id', 'media_id', 'hari', 'aging', 'tanggal', 'periode']);
