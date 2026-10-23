@@ -144,6 +144,28 @@
         .kpi-card-link { text-decoration: none; color: inherit; display: block; transition: transform 0.15s ease, box-shadow 0.15s ease; }
         .kpi-card-link:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
 
+        .list-pagination { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; padding-top:16px; border-top:1px solid #e8eef5; margin-top:8px; }
+        .list-pagination-summary { margin:0; color:#718096; font-size:.8rem; }
+        .list-pagination-summary strong { color:#34465c; font-weight:600; }
+        .list-pagination .pagination { gap:4px; flex-wrap:wrap; }
+        .list-pagination .page-link { display:flex; align-items:center; justify-content:center; min-width:34px; height:34px; padding:5px 9px; margin:0; border:1px solid #e2e8f0; border-radius:7px !important; color:#385675; font-size:.8rem; box-shadow:none; }
+        .list-pagination a.page-link:hover { background:#edf4fc; border-color:#adc7e7; }
+        .list-pagination .active .page-link { background:var(--primary); border-color:var(--primary); color:#fff; }
+        .list-pagination .disabled .page-link { background:#f8fafc; color:#a8b3c1; }
+        .list-pagination a.page-link:focus-visible { outline:3px solid #90b8ea; outline-offset:2px; }
+        .list-pagination .paging-mobile { display:none; }
+        @media(max-width:700px) {
+            .sidebar { width:70px; padding:12px 6px; }
+            .sidebar .brand-text, .sidebar .link-label { display:none; }
+            .sidebar .brand { justify-content:center; }
+            .sidebar .nav-link { justify-content:center; padding:10px; }
+            .main-content, .main-content.collapsed { margin-left:70px; padding:12px; }
+            .list-pagination { flex-direction:column; align-items:center; }
+            .list-pagination .paging-number { display:none; }
+            .list-pagination .paging-mobile { display:list-item; }
+            .list-pagination .page-link { min-width:36px; height:36px; }
+        }
+
         .plan-row { cursor: pointer; }
         .plan-row:hover { background-color: #f8fafc; }
     </style>

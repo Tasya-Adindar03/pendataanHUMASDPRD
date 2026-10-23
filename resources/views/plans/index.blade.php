@@ -99,5 +99,6 @@
     @empty
         <p class="text-center text-muted py-4">Belum ada planning iklan. Klik "Tambah Planning" untuk membuat yang pertama.</p>
     @endforelse
+    {{ $planPages->onEachSide(1)->links() }}
 </div>
 @endsection

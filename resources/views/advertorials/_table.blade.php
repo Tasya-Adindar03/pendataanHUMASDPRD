@@ -72,4 +72,4 @@
     </table>
 </div>
 
-{{ $advertorials->links() }}
+{{ $advertorials->onEachSide(1)->links() }}

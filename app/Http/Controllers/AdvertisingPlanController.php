@@ -29,15 +29,17 @@ class AdvertisingPlanController extends Controller
             $query->where('media_id', $request->media_id);
         }
 
-        $plans = $query->orderByDesc('tahun')
+        $planPages = $query->orderByDesc('tahun')
             ->orderByDesc('bulan')
-            ->get()
-            ->groupBy(fn ($p) => $p->bulan . '-' . $p->tahun);
+            ->orderBy('id')
+            ->paginate(15)
+            ->withQueryString();
+        $plans = $planPages->getCollection()->groupBy(fn ($p) => $p->bulan . '-' . $p->tahun);
 
         $companies = Company::orderBy('nama_perusahaan')->get();
         $mediaList = Media::orderBy('nama_media')->get();
 
-        return view('plans.index', compact('plans', 'companies', 'mediaList'));
+        return view('plans.index', compact('plans', 'planPages', 'companies', 'mediaList'));
     }
 
     public function create()

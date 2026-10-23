@@ -55,6 +55,6 @@
             </table>
         </div>
 
-        {{ $companies->links() }}
+        {{ $companies->onEachSide(1)->links() }}
     </div>
 @endsection
