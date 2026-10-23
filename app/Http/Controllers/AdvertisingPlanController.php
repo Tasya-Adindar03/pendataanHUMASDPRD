@@ -42,6 +42,17 @@ class AdvertisingPlanController extends Controller
         return view('plans.index', compact('plans', 'planPages', 'companies', 'mediaList'));
     }
 
+    public function show(AdvertisingPlan $plan)
+    {
+        $plan->load(['company', 'media'])->loadCount('advertorials');
+        $advertorials = $plan->advertorials()->with(['company', 'media'])
+            ->latest('tanggal_kwitansi')->orderByDesc('id')
+            ->paginate(15)->withQueryString();
+        $totalNominal = $plan->advertorials()->sum('nominal');
+
+        return view('plans.show', compact('plan', 'advertorials', 'totalNominal'));
+    }
+
     public function create()
     {
         $companies = Company::orderBy('nama_perusahaan')->get();
