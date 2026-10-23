@@ -174,7 +174,7 @@ window.initDashboardTwo = () => {
         charts.push(new Chart(document.getElementById('d2-' + id), {type, data:{labels,datasets}, options}));
         const head = document.querySelector('#panel-' + id + ' .d2-panel-head');
         const tools = document.createElement('div'); tools.className = 'd2-chart-actions';
-        for (const [action, text, label] of [['expand','⛶','Perbesar grafik'],['download','↓','Unduh grafik PNG']]) {
+        for (const [action, text, label] of [['expand','⛶','Perbesar grafik'],['download','↓','Unduh grafik PNG'],['csv','CSV','Unduh data CSV']]) {
             const button = document.createElement('button'); button.type = 'button'; button.dataset[action + 'Chart'] = id;
             button.textContent = text; button.title = label; button.setAttribute('aria-label', label + ' ' + head.querySelector('h3').textContent);
             tools.appendChild(button);
@@ -301,6 +301,48 @@ window.initDashboardTwo = () => {
     clickable(momentumOptions,p=>jump({tanggal:d.daily[p.index].date}));
     const peakValue=Math.max(0,...d.daily.map(row=>row.value));
     charts.push(new Chart(document.getElementById('d2-insight-momentum'),{type:'line',data:{labels:d.daily.map(row=>row.date),datasets:[{label:'Nilai harian',data:d.daily.map(row=>row.value),borderColor:mint,backgroundColor:'rgba(23,185,155,.08)',fill:true,borderWidth:1.5,tension:.2,pointRadius:d.daily.map(row=>row.value>0&&row.value===peakValue?3:0),pointBackgroundColor:'#db9e36',pointHoverRadius:4}]},options:momentumOptions}));
+    for(const id of ['calendar','insight-overdue','insight-debtors','insight-momentum']) {
+        const panel=document.getElementById('panel-'+id);
+        if(!panel.querySelector('[data-csv-chart]')) {
+            const button=document.createElement('button');button.type='button';button.className='d2-card-expand';button.dataset.csvChart=id;button.textContent='CSV';button.title='Unduh data CSV';button.setAttribute('aria-label','Unduh data '+panel.querySelector('h3').textContent+' sebagai CSV');
+            panel.querySelector('.d2-panel-head,.d2-mini-heading').appendChild(button);
+        }
+    }
+    window.d2ExportCard = id => {
+        const ratio=(part,total)=>total>0?part/total*100:0;
+        const dailyHeaders=['Tanggal','Jumlah publikasi','Nilai harian (IDR)','Nilai kumulatif (IDR)','Bagian lunas kumulatif (IDR)'];
+        const dailyRows=d.daily.map(row=>[row.date,row.count,row.value,row.cumulative,row.paid]);
+        let headers,rows;
+        if(['daily','insight-momentum','calendar'].includes(id)) {
+            headers=dailyHeaders;rows=dailyRows;
+            if(id==='calendar'&&d.monthCount>1){
+                const groups={};for(const row of d.daily){const key=row.date.slice(0,7);groups[key]??=[key,0,0];groups[key][1]+=row.count;groups[key][2]+=row.value;}
+                headers=['Bulan','Jumlah publikasi','Nilai publikasi (IDR)'];rows=Object.values(groups);
+            }
+        } else if(id==='status') {
+            headers=['Status','Nilai (IDR)','Porsi nilai (%)'];rows=['Lunas','Belum dibayar','Jatuh tempo'].map((name,i)=>[name,d.status[i],ratio(d.status[i],d.total)]);
+        } else if(['type','flow'].includes(id)) {
+            headers=['Kanal','Jumlah publikasi','Total nilai (IDR)','Nilai lunas (IDR)','Belum lunas (IDR)','Rata-rata nilai (IDR)','Porsi volume (%)','Porsi nilai (%)','Porsi nilai lunas (%)'];
+            const counts=d.typeProfiles.reduce((sum,row)=>sum+row.count,0),values=d.typeProfiles.reduce((sum,row)=>sum+row.total,0),paid=d.typeProfiles.reduce((sum,row)=>sum+row.paid,0);
+            rows=d.typeProfiles.map((row,i)=>[['Cetak','Online'][i],row.count,row.total,row.paid,row.total-row.paid,row.count>0?row.total/row.count:0,ratio(row.count,counts),ratio(row.total,values),ratio(row.paid,paid)]);
+        } else if(id==='bubble') {
+            headers=['ID media','Media','Kanal','Jumlah publikasi','Total nilai (IDR)','Rata-rata nilai (IDR)','Belum lunas (IDR)','Porsi belum lunas (%)'];rows=d.media.map(row=>[row.id,row.name,row.type,row.count,row.total,row.average,row.outstanding,ratio(row.outstanding,row.total)]);
+        } else if(id==='companies') {
+            let cumulative=0;headers=['ID perusahaan','Perusahaan','Nilai publikasi (IDR)','Lunas (IDR)','Belum lunas (IDR)','Porsi kumulatif seluruh nilai (%)'];rows=d.companies.map(row=>{cumulative+=row.total;return[row.id,row.name,row.total,row.paid,row.outstanding,ratio(cumulative,d.total)];});
+        } else if(id==='aging') {
+            headers=['Umur piutang','Saldo (IDR)','Porsi saldo (%)'];rows=['Belum lewat','1–30 hari','31–60 hari','>60 hari','Tanpa tenggat'].map((name,i)=>[name,d.aging[i],ratio(d.aging[i],d.outstanding)]);
+        } else if(id==='plans') {
+            headers=['Kuota','Slot terpenuhi (dibatasi per rencana)','Sisa slot','Pemenuhan (%)'];rows=[[d.quota,d.realized,Math.max(0,d.quota-d.realized),ratio(d.realized,d.quota)]];
+        } else if(id==='insight-overdue') {
+            headers=['Kategori','Saldo (IDR)','Porsi saldo (%)'];rows=[['Lewat tenggat',d.overdue,ratio(d.overdue,d.outstanding)],['Belum lewat / tanpa tenggat',Math.max(0,d.outstanding-d.overdue),ratio(d.outstanding-d.overdue,d.outstanding)]];
+        } else if(id==='insight-debtors') {
+            headers=['ID perusahaan','Perusahaan','Saldo (IDR)','Porsi saldo (%)'];rows=d.debtors.map(row=>[row.id,row.name,row.outstanding,ratio(row.outstanding,d.outstanding)]);
+            const rest=Math.max(0,d.outstanding-d.debtors.reduce((sum,row)=>sum+row.outstanding,0));if(rest>0)rows.push(['','Perusahaan lainnya',rest,ratio(rest,d.outstanding)]);
+        } else { return; }
+        const params=new URLSearchParams(window.location.search);const focus=['tipe','status','company_id','media_id','tanggal','periode','hari','aging'].filter(key=>params.has(key)).map(key=>key+'='+params.get(key)).join('; ');
+        DashboardExport.download('dashboard-2-'+id+'_'+links.filters.dari_tanggal+'_'+links.filters.sampai_tanggal,
+            ['Periode awal','Periode akhir','Filter aktif','Mode grafik',...headers],rows.map(row=>[links.filters.dari_tanggal,links.filters.sampai_tanggal,focus,mode,...row]));
+    };
     window.d2Observer = new ResizeObserver(() => charts.forEach(chart => chart.resize()));
     window.d2Observer.observe(document.querySelector('.d2-grid'));
 };
@@ -380,6 +422,8 @@ window.initDashboardTwo = () => {
             const expanded = panel.classList.contains('is-expanded'); collapse();
             if(!expanded) {panel.classList.add('is-expanded');target.setAttribute('aria-expanded','true');target.textContent='×';target.title='Kecilkan kartu (Esc)';}
             (window.d2Charts || []).forEach(chart => chart.resize());
+        } else if (target.hasAttribute('data-csv-chart')) {
+            window.d2ExportCard(target.dataset.csvChart);
         } else if (target.hasAttribute('data-download-chart')) {
             const chart = (window.d2Charts || []).find(item => item.canvas.id === 'd2-' + target.dataset.downloadChart);
             if(!chart) return;

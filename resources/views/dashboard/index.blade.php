@@ -92,7 +92,7 @@
     <div class="dash-grid">
         @foreach ($cards as [$id, $title, $note])
             <section class="chart-card" id="card-{{ $id }}" aria-labelledby="title-{{ $id }}">
-                <div class="chart-heading"><h2 id="title-{{ $id }}"><span class="chart-number">{{ sprintf('%02d', $loop->iteration) }}</span>{{ $title }}</h2><div class="d-flex gap-2"><button type="button" class="chart-download" data-expand-card="{{ $id }}" aria-expanded="false" aria-label="Perbesar {{ $title }}" title="Perbesar kartu"><i class="bi bi-arrows-fullscreen"></i></button><button type="button" class="chart-download" data-chart="{{ $id }}" title="Unduh {{ $title }}" aria-label="Unduh {{ $title }} sebagai PNG"><i class="bi bi-download"></i></button></div></div>
+                <div class="chart-heading"><h2 id="title-{{ $id }}"><span class="chart-number">{{ sprintf('%02d', $loop->iteration) }}</span>{{ $title }}</h2><div class="d-flex gap-2"><button type="button" class="chart-download" data-expand-card="{{ $id }}" aria-expanded="false" aria-label="Perbesar {{ $title }}" title="Perbesar kartu"><i class="bi bi-arrows-fullscreen"></i></button><button type="button" class="chart-download" data-card-csv="{{ $id }}" title="Unduh data CSV" aria-label="Unduh data {{ $title }} sebagai CSV"><i class="bi bi-filetype-csv"></i></button><button type="button" class="chart-download" data-chart="{{ $id }}" title="Unduh {{ $title }}" aria-label="Unduh {{ $title }} sebagai PNG"><i class="bi bi-download"></i></button></div></div>
                 <div class="chart-frame"><canvas id="chart-{{ $id }}" role="img" aria-label="{{ $title }}. {{ $note }}"></canvas><div class="chart-empty">Belum ada data untuk periode ini</div></div>
                 <p class="chart-note" title="{{ $note }}">{{ $note }}</p>
             </section>
@@ -175,6 +175,22 @@
         const id = button.dataset.chart;
         const link = document.createElement('a');
         link.href = charts[id].toBase64Image(); link.download = 'dashboard-' + id + '.png'; link.click();
+    }));
+    const cardExports = {
+        trend: [['Bulan','Nilai kwitansi (IDR)'],d.monthly.map(row=>[row.label,row.nominal])],
+        payments: [['Bulan pembayaran','Penerimaan (IDR)'],d.monthly.map(row=>[row.label,row.paid])],
+        volume: [['Bulan','Lunas (jumlah)','Belum dibayar (jumlah)','Jatuh tempo (jumlah)','Total (jumlah)'],d.monthly.map(row=>[row.label,...row.statuses,row.count])],
+        status: [['Status','Jumlah advertorial'],['Lunas','Belum dibayar','Jatuh tempo'].map((name,i)=>[name,d.statusCounts[i]])],
+        type: [['Jenis media','Nilai publikasi (IDR)'],['Cetak','Online'].map((name,i)=>[name,d.typeValues[i]])],
+        companies: [['ID perusahaan','Perusahaan','Nilai publikasi (IDR)'],d.topCompanies.map(row=>[row.id,row.label,row.total])],
+        media: [['ID media','Media','Nilai publikasi (IDR)'],d.topMedia.map(row=>[row.id,row.label,row.total])],
+        aging: [['Umur piutang','Saldo belum lunas (IDR)'],['Belum lewat','1–30 hari','31–60 hari','>60 hari','Tanpa tenggat'].map((name,i)=>[name,d.aging[i]])],
+        plans: [['Capaian rencana','Jumlah rencana'],['Tercapai','Berjalan','Belum mulai'].map((name,i)=>[name,d.planCounts[i]])]
+    };
+    document.querySelectorAll('[data-card-csv]').forEach(button=>button.addEventListener('click',()=>{
+        const id=button.dataset.cardCsv;const [headers,rows]=cardExports[id];
+        DashboardExport.download('dashboard-1-'+id+'_'+period.dari_tanggal+'_'+period.sampai_tanggal,
+            ['Periode awal','Periode akhir',...headers],rows.map(row=>[period.dari_tanggal,period.sampai_tanggal,...row]));
     }));
     function closeExpandedCard() {
         const card = document.querySelector('.chart-card.is-expanded');

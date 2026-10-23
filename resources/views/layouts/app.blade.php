@@ -242,6 +242,7 @@
             localStorage.setItem('sidebarCollapsed', nowCollapsed);
         });
     </script>
+    <script src="{{ asset('js/dashboard-export.js') }}"></script>
     @stack('scripts')
 </body>
 </html>
