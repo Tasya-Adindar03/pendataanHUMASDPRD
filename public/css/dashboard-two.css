@@ -1,0 +1,60 @@
+.main-content { padding:20px 24px; }
+.topbar { margin-bottom:14px; }
+.topbar h1 { font-size:18px; }
+.d2 { --navy:#142c47; --mint:#17b99b; --blue:#5489ed; --violet:#8b73db; --red:#dc6b7d; color:#233950; }
+.d2-hero { position:relative; overflow:hidden; display:flex; justify-content:space-between; gap:24px; align-items:center; padding:26px 30px; border-radius:18px; background:radial-gradient(ellipse at 75% 0%,#26546b 0%,transparent 65%),linear-gradient(110deg,#142c47,#122439); color:#fff; }
+.d2-eyebrow { display:flex; align-items:center; gap:7px; color:#9edbd0; letter-spacing:.12em; font-size:10px; text-transform:uppercase; font-weight:700; }
+.d2-dot { width:6px; height:6px; border-radius:50%; background:#45dbba; box-shadow:0 0 12px #45dbba; }
+.d2-hero h2 { font-size:clamp(21px,2.4vw,32px); font-weight:700; letter-spacing:-.8px; margin:10px 0 8px; }
+.d2-hero p { font-size:12px; line-height:1.6; color:#c0cfde; margin:0; max-width:580px; }
+.d2-filter { min-width:250px; padding:14px; border:1px solid #ffffff26; background:#ffffff09; border-radius:12px; }
+.d2-filter label { display:block; font-size:10px; color:#b4c9da; text-transform:uppercase; letter-spacing:.09em; margin-bottom:7px; }
+.d2-filter input { min-width:0; width:100%; background:#11273b; border:1px solid #5a768b; border-radius:7px; color:#fff; padding:8px; font-size:13px; color-scheme:dark; }
+.d2-filter button { border:0; background:#52d7b9; color:#103e3b; border-radius:7px; padding:8px 11px; font-weight:700; font-size:12px; }
+.d2-filter a { font-size:10px; color:#b8d8e7; display:inline-block; margin-top:8px; }
+.d2-context { display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px; margin:12px 0; color:#7b899b; font-size:10px; }
+.d2-context strong { color:#294764; }
+.d2-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
+.d2-kpi { background:#fff; border:1px solid #e2eaf2; border-radius:13px; padding:15px 17px; min-width:0; }
+.d2-kpi-label { display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#708398; }
+.d2-kpi-label i { color:#7e9ab7; }
+.d2-kpi-value { font-size:clamp(20px,2.1vw,29px); font-weight:750; letter-spacing:-1px; margin:6px 0 4px; white-space:nowrap; }
+.d2-kpi-note { font-size:10px; color:#8190a2; }
+.d2-kpi-note b { font-weight:650; color:#3d627e; }
+.d2-insights { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:16px; }
+.d2-insight { font-size:11px; line-height:1.6; padding:12px 14px; border-radius:11px; border-left:3px solid #83a9d5; background:#eaf1f9; }
+.d2-insight.warn { border-color:#d8909c; background:#fbecf0; }
+.d2-insight.good { border-color:#52b9a5; background:#e9f6f2; }
+.d2-insight strong { display:block; font-size:11px; color:#29445e; margin-bottom:3px; }
+.d2-section { display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; margin:0 0 10px; }
+.d2-section h2 { margin:0; font-size:14px; font-weight:700; }
+.d2-section span { color:#8493a5; font-size:10px; }
+.d2-grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:12px; }
+.d2-panel { grid-column:span 4; min-width:0; background:#fff; border:1px solid #e2eaf2; border-radius:14px; padding:15px; }
+.d2-panel.wide { grid-column:span 6; } .d2-panel.narrow { grid-column:span 3; }
+.d2-panel-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:3px; }
+.d2-panel h3 { font-size:12px; font-weight:700; margin:0; color:#2d435b; }
+.d2-panel-sub { color:#8493a5; font-size:9px; margin-bottom:9px; }
+.d2-panel-index { color:#a0aebd; font-size:9px; font-variant-numeric:tabular-nums; }
+.d2-chart { position:relative; height:185px; }
+.d2-panel.wide .d2-chart { height:185px; }
+.d2-chart canvas { max-width:100%; }
+.d2-foot { margin-top:8px; padding-top:7px; border-top:1px solid #f0f3f7; color:#7c8ea0; font-size:9px; line-height:1.5; }
+.d2-foot strong { color:#3c5b75; }
+.d2-heat { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:5px; margin-top:9px; }
+.d2-daylabel { text-align:center; color:#8a99aa; font-size:9px; }
+.d2-day { display:flex; align-items:center; justify-content:center; height:27px; border-radius:5px; font-size:9px; text-decoration:none; color:#335b67; background:#eef5f6; border:1px solid transparent; }
+.d2-day:hover { outline:2px solid #538c9d; outline-offset:1px; }
+.d2-day.l1 { background:#d2eee7; } .d2-day.l2 { background:#8ed9c8; } .d2-day.l3 { background:#41b99f; color:#fff; } .d2-day.l4 { background:#168a78; color:#fff; }
+.d2-heat-legend { display:flex; justify-content:flex-end; align-items:center; gap:4px; font-size:9px; color:#8192a4; margin-top:9px; }
+.d2-heat-legend i { width:9px; height:9px; border-radius:2px; display:inline-block; }
+.d2-plan-center { position:absolute; top:70%; left:50%; transform:translate(-50%,-50%); text-align:center; pointer-events:none; }
+.d2-plan-center b { display:block; font-size:28px; color:#244c64; letter-spacing:-1px; }.d2-plan-center span { font-size:10px; color:#8a9aaa; }
+.d2-empty { display:none; position:absolute; inset:0; justify-content:center; align-items:center; text-align:center; color:#8a99aa; font-size:11px; background:#fff; }
+.d2-panel.empty .d2-empty { display:flex; }
+.d2-bottom { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; color:#8a98a7; font-size:10px; margin-top:12px; }
+.d2-error { display:none; margin-bottom:12px; padding:12px; border:1px solid #eac47b; border-radius:8px; color:#8f6416; background:#fff7e8; font-size:12px; }
+@media(min-width:1700px) { .d2-chart,.d2-panel.wide .d2-chart {height:220px;} .d2-day {height:32px;} }
+@media(max-width:1150px) { .d2-hero {padding:22px;} .d2-panel.narrow,.d2-panel.wide,.d2-panel {grid-column:span 6;} .d2-insight {padding:9px 12px;} }
+@media(max-width:700px) { .d2-insights {grid-template-columns:1fr;} .d2-kpis {grid-template-columns:repeat(2,minmax(0,1fr));} .d2-hero {flex-direction:column; align-items:stretch; padding:20px;} .d2-filter {min-width:0;} .d2-panel.narrow,.d2-panel.wide,.d2-panel {grid-column:span 12;} .d2-kpi {padding:12px;} .d2-kpi-value {font-size:19px;} .d2-kpi-label {font-size:10px;} }
+@media(prefers-reduced-motion:reduce) { .d2 * {scroll-behavior:auto;} }

@@ -33,6 +33,13 @@ To change ports, set `APP_PORT` and `MAILPIT_PORT` in `.env`; also update `APP_U
 
 Uploads and database data persist in named Docker volumes. The entrypoint creates the public storage link. Keep the same application key across restarts.
 
+## Dashboards
+
+- `/dashboard`: compact overview of the six most recent months.
+- `/dashboard-2`: monthly analytics with a month picker (`?bulan=2026-09`), nine visualizations, and collection insights. The sidebar includes a separate Dashboard 2 menu.
+
+Dashboard 2 groups advertorials by receipt date. Payment status and overdue balances reflect the current state, rather than a historical month-end snapshot. Current-month comparisons are provisional. Plan fulfillment follows the selected plan month and caps contribution at each plan's quota. Charts use the existing Chart.js CDN; summaries and calendar links remain available if it cannot load.
+
 ## Demo data (six months)
 
 After migrating, populate the six most recent months (including the current month):

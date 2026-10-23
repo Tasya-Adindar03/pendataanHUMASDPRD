@@ -185,6 +185,9 @@
             <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                 <i class="bi bi-speedometer2"></i> <span class="link-label">Dashboard</span>
             </a>
+            <a class="nav-link {{ request()->routeIs('dashboard.two') ? 'active' : '' }}" href="{{ route('dashboard.two') }}" title="Dashboard 2">
+                <i class="bi bi-stars"></i> <span class="link-label">Dashboard 2</span>
+            </a>
             <a class="nav-link {{ request()->routeIs('advertorials.index') ? 'active' : '' }}" href="{{ route('advertorials.index') }}">
                 <i class="bi bi-grid"></i> <span class="link-label">Semua Data</span>
             </a>
