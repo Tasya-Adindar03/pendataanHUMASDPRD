@@ -8,6 +8,42 @@ window.initDashboardTwo = () => {
     const d = JSON.parse(document.getElementById('d2-data').textContent);
     const links = JSON.parse(document.getElementById('d2-links').textContent);
     const mint = '#17b99b', blue = '#5489ed', red = '#dc6b7d', violet = '#8b73db';
+    let tooltipElement = document.getElementById('d2-floating-tooltip');
+    if (!tooltipElement) {
+        tooltipElement = document.createElement('div');
+        tooltipElement.id = 'd2-floating-tooltip';
+        tooltipElement.className = 'd2-floating-tooltip';
+        tooltipElement.setAttribute('role','tooltip');
+        document.body.appendChild(tooltipElement);
+    }
+    tooltipElement.hidden = true;
+    const externalTooltip = ({chart, tooltip}) => {
+        if (!tooltip || tooltip.opacity === 0) {tooltipElement.hidden=true;return;}
+        const host = document.fullscreenElement || document.body;
+        if (tooltipElement.parentElement !== host) host.appendChild(tooltipElement);
+        tooltipElement.replaceChildren();
+        for(const title of tooltip.title || []) {
+            const heading=document.createElement('strong');heading.textContent=title;tooltipElement.appendChild(heading);
+        }
+        for(const [index,body] of (tooltip.body || []).entries()) {
+            const row=document.createElement('div');row.className='d2-tooltip-row';
+            const dot=document.createElement('i');
+            const color=tooltip.labelColors?.[index]?.backgroundColor;
+            dot.style.backgroundColor=typeof color==='string'?color:'#78a6d4';row.appendChild(dot);
+            const text=document.createElement('span');text.textContent=[...(body.before || []),...(body.lines || []),...(body.after || [])].join(' · ');row.appendChild(text);tooltipElement.appendChild(row);
+        }
+        tooltipElement.hidden=false;
+        const rect=chart.canvas.getBoundingClientRect();
+        const box=tooltipElement.getBoundingClientRect();
+        const anchorX=rect.left+tooltip.caretX*(rect.width/chart.width);
+        const anchorY=rect.top+tooltip.caretY*(rect.height/chart.height);
+        let left=anchorX+12;
+        let top=anchorY+12;
+        if(left+box.width>window.innerWidth-8)left=anchorX-box.width-12;
+        if(top+box.height>window.innerHeight-8)top=anchorY-box.height-12;
+        tooltipElement.style.left=Math.max(8,Math.min(left,window.innerWidth-box.width-8))+'px';
+        tooltipElement.style.top=Math.max(8,Math.min(top,window.innerHeight-box.height-8))+'px';
+    };
     const money = value => new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', maximumFractionDigits:0}).format(value);
     const million = value => new Intl.NumberFormat('id-ID', {maximumFractionDigits:1}).format(value / 1000000);
     const jump = params => {
@@ -29,7 +65,8 @@ window.initDashboardTwo = () => {
         maintainAspectRatio:false,
         responsive:true,
         animation:{duration:window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600},
-        plugins:{legend:{display:false}, tooltip:{backgroundColor:'#18364c', padding:10, cornerRadius:8, callbacks:{label:c => `${c.dataset.label || c.label}: ${money(c.raw)}`}}},
+        interaction:{mode:'nearest',intersect:false},
+        plugins:{legend:{display:false}, tooltip:{enabled:false,external:externalTooltip,backgroundColor:'#18364c', padding:10, cornerRadius:8, callbacks:{label:c => `${c.dataset.label || c.label}: ${money(c.raw)}`}}},
         scales:{x:{grid:{display:false}, border:{display:false}, ticks:{maxRotation:0, maxTicksLimit:8, font:{size:9}}}, y:{beginAtZero:true, grid, border:{display:false}, ticks:currencyTicks}}
     });
     function render(id, type, labels, datasets, options, hasData) {
@@ -243,7 +280,7 @@ window.initDashboardTwo = () => {
     ],planOptions,d.quota > 0);
 
     const miniOptions = () => {
-        const options=base();options.plugins.legend.display=false;options.scales={x:{display:false,stacked:true,min:0,max:100},y:{display:false,stacked:true}};options.indexAxis='y';
+        const options=base();options.interaction={mode:'nearest',intersect:false,axis:'x'};options.plugins.legend.display=false;options.scales={x:{display:false,stacked:true,min:0,max:100},y:{display:false,stacked:true}};options.indexAxis='y';
         options.plugins.tooltip.callbacks.label=c=>c.dataset.label+': '+money(c.dataset.amount)+' ('+c.raw.toFixed(1)+'%)';
         return options;
     };
@@ -369,6 +406,10 @@ window.initDashboardTwo = () => {
         event.preventDefault(); const url = new URL(window.location.href);url.searchParams.delete('bulan');url.searchParams.set('bulan_awal',document.getElementById('d2-month').value);url.searchParams.set('bulan_akhir',document.getElementById('d2-month-end').value);for(const key of ['hari','tanggal','periode'])url.searchParams.delete(key);load(url);
     });
     document.addEventListener('keydown', event => {if(event.key === 'Escape') collapse();});
+    const hideTooltip=()=>{const tooltip=document.getElementById('d2-floating-tooltip');if(tooltip)tooltip.hidden=true;};
+    document.addEventListener('scroll',hideTooltip,true);
+    window.addEventListener('resize',hideTooltip);
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')hideTooltip();});
     window.addEventListener('popstate', () => load(window.location.href,false));
     window.initDashboardTwo();
 })();

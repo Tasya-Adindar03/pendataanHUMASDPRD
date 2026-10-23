@@ -161,3 +161,9 @@
 .d2-mini-panel small {display:block;font-size:7px;color:#8296a7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .d2-mini-empty {position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;color:#8c9cab;font-size:9px;}
 @media(max-width:700px){.d2-mini-canvas {height:48px;}.d2-mini-panel small {font-size:9px;}.d2-mini-heading h3 {font-size:12px;}}
+.d2-floating-tooltip {position:fixed;z-index:2147483647;pointer-events:none;max-width:min(340px,calc(100vw - 16px));padding:11px 13px;border-radius:9px;background:#15364d;color:#fff;box-shadow:0 5px 22px #10283a38;font:11px/1.5 Inter,sans-serif;border:1px solid #ffffff1f;overflow-wrap:anywhere;}
+.d2-floating-tooltip[hidden] {display:none !important;}
+.d2-floating-tooltip strong {display:block;margin-bottom:5px;font-size:11px;color:#e0edf8;}
+.d2-tooltip-row {display:flex;align-items:baseline;gap:7px;}
+.d2-tooltip-row + .d2-tooltip-row {margin-top:4px;}
+.d2-tooltip-row i {display:inline-block;width:8px;height:8px;border-radius:2px;flex-shrink:0;}
