@@ -58,3 +58,56 @@
 @media(max-width:1150px) { .d2-hero {padding:22px;} .d2-panel.narrow,.d2-panel.wide,.d2-panel {grid-column:span 6;} .d2-insight {padding:9px 12px;} }
 @media(max-width:700px) { .d2-insights {grid-template-columns:1fr;} .d2-kpis {grid-template-columns:repeat(2,minmax(0,1fr));} .d2-hero {flex-direction:column; align-items:stretch; padding:20px;} .d2-filter {min-width:0;} .d2-panel.narrow,.d2-panel.wide,.d2-panel {grid-column:span 12;} .d2-kpi {padding:12px;} .d2-kpi-value {font-size:19px;} .d2-kpi-label {font-size:10px;} }
 @media(prefers-reduced-motion:reduce) { .d2 * {scroll-behavior:auto;} }
+
+/* Fit the complete dashboard into a desktop viewport. */
+@media (min-width:1000px) and (min-height:650px) {
+    .main-content { padding:10px 18px; }
+    .topbar { margin-bottom:7px; }
+    .topbar h1 { font-size:15px; }
+    .d2 { height:calc(100dvh - 58px); display:flex; flex-direction:column; }
+    .d2-hero { flex-shrink:0; padding:11px 16px; gap:16px; border-radius:12px; }
+    .d2-eyebrow { font-size:8px; }
+    .d2-hero h2 { font-size:20px; margin:4px 0; line-height:1.2; }
+    .d2-hero h2 br { display:none; }
+    .d2-hero p { font-size:10px; line-height:1.4; max-width:650px; }
+    .d2-filter { min-width:230px; padding:8px 10px; }
+    .d2-filter label { font-size:8px; margin-bottom:3px; }
+    .d2-filter input,.d2-filter button { font-size:10px; padding:5px 7px; }
+    .d2-filter a { font-size:8px; margin-top:3px; }
+    .d2-context { margin:5px 0; font-size:8px; }
+    .d2-kpis { grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-bottom:6px; }
+    .d2-kpi { padding:7px 11px; border-radius:9px; }
+    .d2-kpi-label { font-size:9px; }
+    .d2-kpi-value { font-size:21px; margin:2px 0; }
+    .d2-kpi-note { font-size:8px; }
+    .d2-insights { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-bottom:7px; }
+    .d2-insight { padding:6px 9px; font-size:9px; line-height:1.35; }
+    .d2-insight strong { font-size:9px; margin-bottom:2px; }
+    .d2-section { margin-bottom:5px; }
+    .d2-section h2 { font-size:11px; }
+    .d2-section span { font-size:8px; }
+    .d2-grid { flex:1; min-height:270px; grid-template-rows:repeat(3,minmax(0,1fr)); gap:7px; }
+    .d2-panel,.d2-panel.wide,.d2-panel.narrow { grid-column:span 4; padding:7px 10px; border-radius:10px; display:flex; flex-direction:column; min-height:0; }
+    .d2-panel h3 { font-size:10px; }
+    .d2-panel-head { margin-bottom:2px; flex-shrink:0; }
+    .d2-panel-index { font-size:7px; }
+    .d2-panel-sub { font-size:8px; margin-bottom:3px; flex-shrink:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .d2-chart,.d2-panel.wide .d2-chart { flex:1; height:auto; min-height:0; }
+    .d2-foot { font-size:7px; margin-top:3px; padding-top:3px; flex-shrink:0; line-height:1.3; }
+    .d2-heat { flex:1; min-height:0; gap:3px; margin-top:2px; grid-auto-rows:minmax(0,1fr); }
+    .d2-day { height:auto; min-height:0; font-size:8px; border-radius:3px; }
+    .d2-daylabel { font-size:7px; }
+    .d2-heat-legend { margin-top:3px; font-size:7px; }
+    .d2-heat-legend i { width:7px; height:7px; }
+    .d2-plan-center b { font-size:22px; }
+    .d2-plan-center span { font-size:8px; }
+    .d2-bottom { margin-top:5px; font-size:8px; }
+}
+@media (min-width:1000px) and (min-height:650px) and (max-height:800px) {
+    .d2-hero h2 { font-size:17px; }
+    .d2-hero p { display:none; }
+    .d2-insight { font-size:8px; }
+    .d2-kpi-value { font-size:18px; }
+    .d2-panel-sub { font-size:7px; }
+    .d2-foot { font-size:7px; }
+}
