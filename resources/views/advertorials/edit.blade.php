@@ -45,15 +45,16 @@
 
             <div class="mb-3">
                 <label class="form-label">Planning Iklan (opsional)</label>
-                <select name="plan_id" class="form-select">
+                <select name="plan_id" id="plan_id" class="form-select">
                     <option value="">-- Pilih Planning Iklan --</option>
                     @foreach ($plans as $plan)
-                        <option value="{{ $plan->id }}" @selected(old('plan_id', $advertorial->plan_id) == $plan->id)>
-                            {{ \Carbon\Carbon::create()->month($plan->bulan)->translatedFormat('F') }} {{ $plan->tahun }} - {{ $plan->company->nama_perusahaan }} - {{ $plan->media->nama_media }}
-                        </option>
+                        @if ($plan['company_id'] == old('company_id', $advertorial->company_id) && $plan['media_id'] == old('media_id', $advertorial->media_id))
+                            <option value="{{ $plan['id'] }}" @selected(old('plan_id', $advertorial->plan_id) == $plan['id'])>{{ $plan['label'] }}</option>
+                        @endif
                     @endforeach
                 </select>
                 <small class="text-muted">Jika data ini terkait dengan planning iklan yang sudah dibuat, pilih planning iklan yang sesuai. Jika tidak, biarkan kosong.</small>
+            </div>
 
             <div class="mb-3">
                 <label class="form-label">Judul Advertorial / Rilis</label>
@@ -136,7 +137,7 @@
     @include('partials.rupiah-script')
     <script>
         const allPlans = @json($plans);
-        const selectedPlanId = "{{ old('plan_id', $advertorial->plan_id) }}";
+        const selectedPlanId = @json(old('plan_id', $advertorial->plan_id));
 
         document.addEventListener('DOMContentLoaded', function () {
             initRupiahInput('nominal_display', 'nominal');

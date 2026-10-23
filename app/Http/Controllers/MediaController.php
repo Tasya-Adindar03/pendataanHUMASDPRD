@@ -19,7 +19,7 @@ class MediaController extends Controller
             $query->where('tipe', $request->tipe);
         }
 
-        $mediaList = $query->orderBy('nama_media')->paginate(15)->withQueryString();
+        $mediaList = $query->orderBy('nama_media')->orderBy('id')->paginate(15)->withQueryString();
 
         return view('media.index', compact('mediaList'));
     }

@@ -66,6 +66,6 @@
             </table>
         </div>
 
-        {{ $mediaList->links() }}
+        {{ $mediaList->onEachSide(1)->links() }}
     </div>
 @endsection

@@ -14,7 +14,7 @@ class AdvertorialController extends Controller
     {
         $query = Advertorial::with(['company', 'media', 'plan']);
         $this->applyFilters($query, $request);
-        $advertorials = $query->latest('tanggal_kwitansi')->paginate(15)->withQueryString();
+        $advertorials = $query->latest('tanggal_kwitansi')->orderByDesc('id')->paginate(15)->withQueryString();
 
         $companies = Company::orderBy('nama_perusahaan')->get();
         $mediaList = Media::orderBy('nama_media')->get();
@@ -30,7 +30,7 @@ class AdvertorialController extends Controller
         $query = Advertorial::with(['company', 'media', 'plan'])
             ->whereHas('media', fn ($q) => $q->where('tipe', $tipe));
         $this->applyFilters($query, $request);
-        $advertorials = $query->latest('tanggal_kwitansi')->paginate(15)->withQueryString();
+        $advertorials = $query->latest('tanggal_kwitansi')->orderByDesc('id')->paginate(15)->withQueryString();
 
         $companies = Company::orderBy('nama_perusahaan')->get();
         $mediaList = Media::where('tipe', $tipe)->orderBy('nama_media')->get();

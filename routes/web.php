@@ -4,6 +4,7 @@ use App\Http\Controllers\AdvertisingPlanController;
 use App\Http\Controllers\AdvertorialController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DashboardTwoController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\MediaController;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,7 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard-2', [DashboardTwoController::class, 'index'])->name('dashboard.two');
 
 Route::prefix('advertorials')->name('advertorials.')->group(function () {
     Route::get('/', [AdvertorialController::class, 'index'])->name('index');
