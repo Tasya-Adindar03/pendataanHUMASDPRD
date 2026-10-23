@@ -147,12 +147,17 @@
     .d2-panel-head .d2-panel-index {display:none;}
     .d2-grid {min-height:250px;}
 }
-.d2-simulation {display:grid;grid-template-columns:auto 1fr;column-gap:7px;align-items:center;margin-top:5px;border-top:1px solid #e6cdd4;padding-top:4px;}
-.d2-simulation label {font-size:8px;white-space:nowrap;}.d2-simulation output {font-weight:700;}
-.d2-simulation input {width:100%;height:9px;accent-color:#c16479;cursor:ew-resize;}
-.d2-simulation small {grid-column:1/-1;font-size:8px;color:#946274;line-height:1.3;}
 .d2-filter {min-width:350px;}.d2-filter input {width:115px;}
 .d2-tools select {font-size:9px;border:1px solid #dce5ef;border-radius:6px;padding:3px;background:#fff;color:#41617d;max-width:120px;}
 .d2-heat-months {grid-template-columns:repeat(3,minmax(0,1fr));}
 .d2-heat-months .d2-day {flex-direction:column;gap:2px;min-height:22px;}.d2-heat-months small {font-size:7px;}
 @media(max-width:700px){.d2-filter {min-width:0;}.d2-filter input {width:100%;}.d2-filter .d-flex {flex-wrap:wrap;}.d2-heat-months .d2-day {min-height:40px;}}
+.d2-insight-charts {gap:8px;}
+.d2-mini-panel {background:#fff;border:1px solid #e1e9f1;border-radius:9px;padding:7px 10px;min-width:0;}
+.d2-mini-heading {display:flex;justify-content:space-between;gap:6px;align-items:center;}
+.d2-mini-heading h3 {font-size:10px;font-weight:700;margin:0;color:#36516a;}
+.d2-mini-heading strong {font-size:8px;color:#7990a4;font-weight:600;white-space:nowrap;}
+.d2-mini-canvas {height:32px;position:relative;}
+.d2-mini-panel small {display:block;font-size:7px;color:#8296a7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.d2-mini-empty {position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#fff;color:#8c9cab;font-size:9px;}
+@media(max-width:700px){.d2-mini-canvas {height:48px;}.d2-mini-panel small {font-size:9px;}.d2-mini-heading h3 {font-size:12px;}}

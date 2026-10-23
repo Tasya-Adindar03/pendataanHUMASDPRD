@@ -120,6 +120,8 @@ class DashboardTwoController extends Controller
             'media' => $media, 'type' => $typeValues, 'aging' => $aging,
             'total' => $total, 'paid' => $paid, 'outstanding' => $outstanding,
             'quota' => $quota, 'realized' => $realized, 'monthCount' => $monthCount,
+            'overdue' => $overdue,
+            'debtors' => $companies->where('outstanding', '>', 0)->sortByDesc('outstanding')->take(4)->values()->all(),
             'typeProfiles' => array_map(function ($type) use ($rows) {
                 $group = $rows->filter(fn ($row) => optional($row->media)->tipe === $type);
                 return ['count' => $group->count(), 'total' => (float) $group->sum('nominal'), 'paid' => (float) $group->where('status', 'sudah_dibayar')->sum('nominal')];

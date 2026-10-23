@@ -242,6 +242,27 @@ window.initDashboardTwo = () => {
         {data:[d.realized, Math.max(0,d.quota-d.realized)],backgroundColor:[mint,'#eaf0f5'],borderWidth:0,borderRadius:5}
     ],planOptions,d.quota > 0);
 
+    const miniOptions = () => {
+        const options=base();options.plugins.legend.display=false;options.scales={x:{display:false,stacked:true,min:0,max:100},y:{display:false,stacked:true}};options.indexAxis='y';
+        options.plugins.tooltip.callbacks.label=c=>c.dataset.label+': '+money(c.dataset.amount)+' ('+c.raw.toFixed(1)+'%)';
+        return options;
+    };
+    const overdueOptions=miniOptions();
+    clickable(overdueOptions,()=>window.openDashboardDetails(true));
+    charts.push(new Chart(document.getElementById('d2-insight-overdue'),{type:'bar',data:{labels:['Saldo piutang'],datasets:[
+        {label:'Lewat tenggat',amount:d.overdue,data:[d.outstanding>0?d.overdue/d.outstanding*100:0],backgroundColor:red,borderRadius:4,barPercentage:.7},
+        {label:'Belum lewat / tanpa tenggat',amount:Math.max(0,d.outstanding-d.overdue),data:[d.outstanding>0?(d.outstanding-d.overdue)/d.outstanding*100:0],backgroundColor:'#c2dce8',borderRadius:4,barPercentage:.7}
+    ]},options:overdueOptions}));
+    const debtors=[...d.debtors];
+    const remaining=Math.max(0,d.outstanding-debtors.reduce((sum,row)=>sum+row.outstanding,0));
+    if(remaining>0)debtors.push({name:'Perusahaan lainnya',outstanding:remaining,id:null});
+    const debtorOptions=miniOptions();clickable(debtorOptions,p=>debtors[p.datasetIndex].id?jump({company_id:debtors[p.datasetIndex].id}):window.openDashboardDetails(true));
+    charts.push(new Chart(document.getElementById('d2-insight-debtors'),{type:'bar',data:{labels:['Piutang'],datasets:debtors.map((row,i)=>({label:row.name,amount:row.outstanding,data:[d.outstanding>0?row.outstanding/d.outstanding*100:0],backgroundColor:['#8b73db','#5489ed','#17b99b','#e8b45a','#d7e0ea'][i],borderWidth:1,borderColor:'#fff',barPercentage:.7}))},options:debtorOptions}));
+    const momentumOptions=base();momentumOptions.scales={x:{display:false},y:{display:false,beginAtZero:true}};momentumOptions.interaction={mode:'index',intersect:false};
+    momentumOptions.plugins.tooltip.callbacks.title=items=>d.daily[items[0].dataIndex].date;
+    clickable(momentumOptions,p=>jump({tanggal:d.daily[p.index].date}));
+    const peakValue=Math.max(0,...d.daily.map(row=>row.value));
+    charts.push(new Chart(document.getElementById('d2-insight-momentum'),{type:'line',data:{labels:d.daily.map(row=>row.date),datasets:[{label:'Nilai harian',data:d.daily.map(row=>row.value),borderColor:mint,backgroundColor:'rgba(23,185,155,.08)',fill:true,borderWidth:1.5,tension:.2,pointRadius:d.daily.map(row=>row.value>0&&row.value===peakValue?3:0),pointBackgroundColor:'#db9e36',pointHoverRadius:4}]},options:momentumOptions}));
     window.d2Observer = new ResizeObserver(() => charts.forEach(chart => chart.resize()));
     window.d2Observer.observe(document.querySelector('.d2-grid'));
 };
@@ -342,15 +363,6 @@ window.initDashboardTwo = () => {
         if(event.target.id !== 'd2-visual-mode') return;
         localStorage.setItem('d2-visual-mode-v2',event.target.value);
         window.initDashboardTwo();
-    });
-    document.addEventListener('input', event => {
-        if (event.target.id !== 'd2-recovery') return;
-        const ratio = Number(event.target.value);
-        const data = JSON.parse(document.getElementById('d2-data').textContent);
-        const extra = data.outstanding * ratio / 100;
-        const format = value => new Intl.NumberFormat('id-ID',{maximumFractionDigits:1}).format(value / 1000000);
-        document.getElementById('d2-recovery-value').textContent = ratio + '%';
-        document.querySelector('[data-recovery-result]').textContent = `Simulasi: +Rp ${format(extra)} jt → porsi lunas ${data.total > 0 ? ((data.paid+extra)/data.total*100).toFixed(1) : 0}%. Data tidak diubah.`;
     });
     document.addEventListener('submit', event => {
         if (!event.target.matches('.d2-filter')) return;
