@@ -11,9 +11,11 @@ window.initDashboardTwo = () => {
     const money = value => new Intl.NumberFormat('id-ID', {style:'currency', currency:'IDR', maximumFractionDigits:0}).format(value);
     const million = value => new Intl.NumberFormat('id-ID', {maximumFractionDigits:1}).format(value / 1000000);
     const jump = params => {
-        if (params.dari_tanggal) return window.setDashboardFocus({hari:params.dari_tanggal.slice(-2).replace(/^0/,'')});
+        if (params.dari_tanggal) return window.setDashboardFocus({tanggal:params.dari_tanggal});
         window.setDashboardFocus(params);
     };
+    const compare = localStorage.getItem('d2-visual-mode') === 'compare';
+    document.getElementById('d2-visual-mode').value = compare ? 'compare' : 'explore';
     const charts = [];
     window.d2Charts = charts;
     Chart.defaults.font.family = 'Inter, sans-serif';
@@ -30,6 +32,56 @@ window.initDashboardTwo = () => {
         scales:{x:{grid:{display:false}, border:{display:false}, ticks:{maxRotation:0, maxTicksLimit:8, font:{size:9}}}, y:{beginAtZero:true, grid, border:{display:false}, ticks:currencyTicks}}
     });
     function render(id, type, labels, datasets, options, hasData) {
+        const panel = document.getElementById('panel-' + id);
+        panel.dataset.originalSub ??= panel.querySelector('.d2-panel-sub').textContent;
+        panel.dataset.originalFoot ??= panel.querySelector('.d2-foot').textContent;
+        panel.querySelector('.d2-panel-sub').textContent = panel.dataset.originalSub;
+        panel.querySelector('.d2-foot').textContent = panel.dataset.originalFoot;
+        const horizontal = () => {
+            const result = base(); result.indexAxis = 'y';
+            result.scales.x = {beginAtZero:true,grid,border:{display:false},ticks:currencyTicks};
+            result.scales.y = {grid:{display:false},border:{display:false},ticks:{font:{size:8},callback:function(v){const text=this.getLabelForValue(v);return text.length>18?text.slice(0,7)+'…'+text.slice(-9):text;}}};
+            return result;
+        };
+        const caption = text => {panel.querySelector('.d2-panel-sub').textContent = text;};
+        if(compare) {
+            if(id === 'daily') {
+                type='bar';datasets=[{label:'Nilai harian',data:d.daily.map(row=>row.value),backgroundColor:blue,borderRadius:3}];options.plugins.legend.display=false;
+                caption('Nilai kwitansi harian · bukan kumulatif · Rp juta');
+                panel.querySelector('.d2-foot').textContent='Batang menunjukkan nilai per hari. Klik untuk fokus tanggal.';
+            } else if(id === 'status') {
+                type='bar';options=horizontal();clickable(options,p=>jump({status:['sudah_dibayar','belum_dibayar','jatuh_tempo'][p.index]}));
+                caption('Bandingkan nilai setiap status pada sumbu yang sama · Rp juta');
+            } else if(id === 'type') {
+                type='doughnut';options.cutout='60%';delete options.scales;
+                caption('Porsi nilai cetak dan online · hover untuk rupiah');
+            } else if(id === 'bubble') {
+                type='bar';labels=d.media.map(row=>row.name);datasets=[{label:'Rata-rata nilai',data:d.media.map(row=>row.average),backgroundColor:violet,borderRadius:3}];
+                options=horizontal();clickable(options,p=>jump({media_id:d.media[p.index].id}));
+                caption('Rata-rata nilai per publikasi di setiap media · Rp juta');
+                panel.querySelector('.d2-foot').textContent='Bandingkan ukuran transaksi rata-rata, tanpa dipengaruhi jumlah publikasi.';
+            } else if(id === 'companies') {
+                type='line';datasets=[{label:'Total nilai',data:d.companies.map(row=>row.total),borderColor:mint,backgroundColor:mint,pointRadius:5,pointHoverRadius:7,showLine:false}];
+                options=horizontal();clickable(options,p=>jump({company_id:d.companies[p.index].id}));
+                caption('Dot plot: total nilai lima perusahaan terbesar · Rp juta');
+                panel.querySelector('.d2-foot').textContent='Posisi titik menunjukkan total nilai. Klik untuk memfokuskan perusahaan.';
+            } else if(id === 'flow') {
+                type='bar';labels=['Nilai publikasi'];datasets=[{label:'Lunas',data:[d.paid],backgroundColor:mint},{label:'Belum lunas',data:[d.outstanding],backgroundColor:red}];
+                options=horizontal();options.scales.x.stacked=true;options.scales.y.stacked=true;options.plugins.legend=legend;
+                clickable(options,p=>p.datasetIndex===0?jump({status:'sudah_dibayar'}):window.openDashboardDetails(true));
+                caption('Batang komposisi nilai lunas dan sisa piutang · Rp juta');
+            } else if(id === 'aging') {
+                type='doughnut';options=base();delete options.scales;options.cutout='55%';options.plugins.legend={...legend,labels:{...legend.labels,font:{size:8},padding:4}};
+                clickable(options,p=>window.setDashboardFocus({aging:String(p.index)}));caption('Porsi saldo menurut kelompok umur · hover untuk rupiah');
+            } else if(id === 'plans') {
+                type='bar';labels=['Kuota periode'];datasets=[{label:'Terpenuhi',data:[d.realized],backgroundColor:mint},{label:'Sisa',data:[Math.max(0,d.quota-d.realized)],backgroundColor:'#dce6ee'}];
+                const originalClick=options.onClick;options=horizontal();options.scales.x.stacked=true;options.scales.y.stacked=true;
+                options.scales.x.ticks={precision:0};options.plugins.legend=legend;options.plugins.tooltip.callbacks.label=c=>c.dataset.label+': '+c.raw+' slot';options.onClick=originalClick;
+                caption('Bullet bar: slot terpenuhi dibanding sisa kuota');
+            }
+        }
+        if(id === 'plans') panel.querySelector('.d2-plan-center').style.display=compare?'none':'';
+        panel.querySelectorAll('.d2-chart-actions').forEach(el=>el.remove());
         document.getElementById('panel-' + id).classList.toggle('empty', !hasData);
         charts.push(new Chart(document.getElementById('d2-' + id), {type, data:{labels,datasets}, options}));
         const head = document.querySelector('#panel-' + id + ' .d2-panel-head');
@@ -57,7 +109,7 @@ window.initDashboardTwo = () => {
     dailyOptions.interaction = {mode:'index', intersect:false};
     dailyOptions.plugins.tooltip.callbacks.title = items => d.daily[items[0].dataIndex].date;
     clickable(dailyOptions, point => jump({dari_tanggal:d.daily[point.index].date, sampai_tanggal:d.daily[point.index].date}));
-    render('daily','line',d.daily.map(row => row.day),[
+    render('daily','line',d.daily.map(row => d.monthCount > 1 ? row.date.slice(5).split('-').reverse().join('/') : row.day),[
         {label:'Nilai kumulatif', data:d.daily.map(row => row.cumulative), borderColor:blue, backgroundColor:gradient('daily','rgba(84,137,237,.30)'), fill:true, tension:.3, pointRadius:0, pointHoverRadius:4, borderWidth:2},
         {label:'Bagian lunas', data:d.daily.map(row => row.paid), borderColor:mint, backgroundColor:'rgba(23,185,155,.08)', fill:true, tension:.3, pointRadius:0, pointHoverRadius:4, borderWidth:2}
     ],dailyOptions,d.total > 0);
@@ -130,7 +182,8 @@ window.initDashboardTwo = () => {
     planOptions.layout = {padding:{top:12,bottom:8}};
     planOptions.plugins.tooltip.callbacks.label = c => `${c.label}: ${c.raw} slot`;
     clickable(planOptions, () => {
-        const current = new URL(window.location.href); const month = current.searchParams.get('bulan') || document.getElementById('d2-month').value;
+        if(d.monthCount > 1) {document.querySelector('[data-expand-chart="plans"]').click();return;}
+        const current = new URL(window.location.href); const month = document.getElementById('d2-month').value;
         const params = new URLSearchParams({bulan:Number(month.slice(5)),tahun:month.slice(0,4)});
         for (const key of ['company_id','media_id']) if(current.searchParams.has(key)) params.set(key,current.searchParams.get(key));
         window.location.href = '/plans?' + params;
@@ -187,7 +240,7 @@ window.initDashboardTwo = () => {
         const dialog = document.getElementById('d2-details');
         dialog.querySelectorAll('tbody tr[data-status]').forEach(row => {row.hidden = outstandingOnly && row.dataset.status === 'sudah_dibayar';});
         dialog.querySelector('#d2-detail-title').textContent = outstandingOnly ? 'Telusuri saldo belum lunas' : 'Telusuri data terpilih';
-        dialog.querySelector('header p').textContent = document.getElementById('d2-month').value + ' · ' + [...dialog.querySelectorAll('tbody tr[data-status]')].filter(row => !row.hidden).length + ' baris ditampilkan (maks. 50 nilai terbesar dari fokus terpilih).';
+        dialog.querySelector('header p').textContent = document.getElementById('d2-month').value + ' – ' + document.getElementById('d2-month-end').value + ' · ' + [...dialog.querySelectorAll('tbody tr[data-status]')].filter(row => !row.hidden).length + ' baris ditampilkan (maks. 50 nilai terbesar dari fokus terpilih).';
         dialog.showModal();
     };
     function collapse() {
@@ -206,7 +259,7 @@ window.initDashboardTwo = () => {
         } else if (target.hasAttribute('data-clear-focus')) {
             const url = new URL(window.location.href); url.searchParams.delete(target.dataset.clearFocus); load(url);
         } else if (target.hasAttribute('data-reset-focus')) {
-            const url = new URL(window.location.href); const month = url.searchParams.get('bulan'); url.search = ''; if(month) url.searchParams.set('bulan',month); load(url);
+            const url = new URL(window.location.href); const start=document.getElementById('d2-month').value,end=document.getElementById('d2-month-end').value; url.search='';url.searchParams.set('bulan_awal',start);url.searchParams.set('bulan_akhir',end);load(url);
         } else if (target.hasAttribute('data-open-details')) {
             window.openDashboardDetails();
         } else if (target.hasAttribute('data-close-details')) {
@@ -232,8 +285,13 @@ window.initDashboardTwo = () => {
                 return '"'+text.replace(/"/g,'""')+'"';
             }).join(',')).join('\r\n');
             const url = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
-            const link = document.createElement('a');link.download = 'detail-dashboard-'+document.getElementById('d2-month').value+'.csv';link.href = url;link.click();setTimeout(() => URL.revokeObjectURL(url),1000);
+            const link = document.createElement('a');link.download = 'detail-dashboard-'+document.getElementById('d2-month').value+'_'+document.getElementById('d2-month-end').value+'.csv';link.href = url;link.click();setTimeout(() => URL.revokeObjectURL(url),1000);
         }
+    });
+    document.addEventListener('change', event => {
+        if(event.target.id !== 'd2-visual-mode') return;
+        localStorage.setItem('d2-visual-mode',event.target.value);
+        window.initDashboardTwo();
     });
     document.addEventListener('input', event => {
         if (event.target.id !== 'd2-recovery') return;
@@ -246,7 +304,7 @@ window.initDashboardTwo = () => {
     });
     document.addEventListener('submit', event => {
         if (!event.target.matches('.d2-filter')) return;
-        event.preventDefault(); const url = new URL(window.location.href);url.searchParams.set('bulan',document.getElementById('d2-month').value);url.searchParams.delete('hari');load(url);
+        event.preventDefault(); const url = new URL(window.location.href);url.searchParams.delete('bulan');url.searchParams.set('bulan_awal',document.getElementById('d2-month').value);url.searchParams.set('bulan_akhir',document.getElementById('d2-month-end').value);for(const key of ['hari','tanggal','periode'])url.searchParams.delete(key);load(url);
     });
     document.addEventListener('keydown', event => {if(event.key === 'Escape') collapse();});
     window.addEventListener('popstate', () => load(window.location.href,false));

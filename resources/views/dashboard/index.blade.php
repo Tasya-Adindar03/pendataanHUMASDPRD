@@ -46,6 +46,7 @@
         .dash-grid { grid-template-columns:1fr; } .dash-kpis { grid-template-columns:repeat(2,minmax(0,1fr)); }
         .dash-heading { align-items:flex-start; flex-direction:column; } .chart-frame { height:180px; }
     }
+.dash-range {display:flex;gap:7px;align-items:end;flex-wrap:wrap;font-size:10px;} .dash-range label {display:grid;gap:3px;color:#718096;} .dash-range input,.dash-range button,.dash-range a {padding:5px 7px;border:1px solid #dce5ef;border-radius:6px;background:#fff;color:#37536e;font-size:10px;}
 </style>
 @php
     $money = fn ($value) => 'Rp '.number_format($value / 1000000, 1, ',', '.').' jt';
@@ -59,24 +60,25 @@
         ['media', '5 media terbesar', 'Peringkat berdasarkan total nilai · Rp juta'],
         ['aging', 'Umur piutang', 'Saldo belum lunas menurut tanggal jatuh tempo · Rp juta'],
         ['payments', 'Tren penerimaan pembayaran', 'Tanggal dibayar, termasuk kwitansi di luar periode · Rp juta'],
-        ['plans', 'Capaian rencana bulan ini', 'Jumlah rencana · tercapai, berjalan, belum mulai'],
+        ['plans', 'Capaian rencana periode', 'Jumlah rencana pada periode pilihan'],
     ];
 @endphp
 <div class="dashboard">
+    @if ($errors->any())<div class="alert alert-danger">{{ $errors->first() }}</div>@endif
     <div class="dash-heading">
-        <div><div class="dash-eyebrow">Ringkasan kinerja publikasi</div><div class="dash-subtitle">9 diagram · enam bulan terakhir · bulan berjalan belum final</div></div>
-        <div class="dash-period"><i class="bi bi-calendar3 me-1"></i> {{ $period }}</div>
+        <div><div class="dash-eyebrow">Ringkasan kinerja publikasi</div><div class="dash-subtitle">9 diagram · periode pilihan · bulan berjalan belum final</div></div>
+        <form method="GET" class="dash-range"><label>Mulai <input type="month" name="bulan_awal" value="{{ $start->format('Y-m') }}" required aria-label="Bulan awal"></label><label>Sampai <input type="month" name="bulan_akhir" value="{{ $end->format('Y-m') }}" required aria-label="Bulan akhir"></label><button type="submit">Terapkan</button><a href="{{ route('dashboard') }}">Reset</a></form>
     </div>
     <div class="dash-kpis">
-        <a class="dash-kpi" href="{{ route('advertorials.index', $filters) }}"><span>Total advertorial</span><strong>{{ number_format($totalData, 0, ',', '.') }}</strong><small>6 bulan terakhir</small></a>
+        <a class="dash-kpi" href="{{ route('advertorials.index', $filters) }}"><span>Total advertorial</span><strong>{{ number_format($totalData, 0, ',', '.') }}</strong><small>{{ $monthCount }} bulan terpilih</small></a>
         <a class="dash-kpi" href="{{ route('advertorials.index', $filters) }}" title="Rp {{ number_format($totalNominal, 0, ',', '.') }}"><span>Nilai publikasi</span><strong>{{ $money($totalNominal) }}</strong><small>berdasarkan kwitansi</small></a>
         <a class="dash-kpi" href="{{ route('advertorials.index', $filters + ['status' => 'sudah_dibayar']) }}"><span>Sudah dibayar</span><strong style="color:var(--green)">{{ $money($totalSudahDibayar) }}</strong><small>{{ $paidRate }}% dari nilai publikasi</small></a>
         <div class="dash-kpi"><span>Belum lunas</span><strong style="color:var(--amber)">{{ $money($totalBelumDibayar) }}</strong><small>termasuk jatuh tempo</small></div>
         <div class="dash-kpi"><span>Lewat jatuh tempo</span><strong style="color:var(--red)">{{ $money($overdueTotal) }}</strong><small>{{ $overdue->count() }} tagihan · dihitung dari tenggat</small></div>
-        <a class="dash-kpi" href="{{ route('plans.index') }}"><span>Realisasi kuota bulan ini</span><strong>{{ $planRate }}%</strong><small>{{ $realized }} / {{ $quota }} slot terpenuhi</small></a>
+        <a class="dash-kpi" href="{{ route('plans.index') }}"><span>Realisasi kuota periode</span><strong>{{ $planRate }}%</strong><small>{{ $realized }} / {{ $quota }} slot terpenuhi</small></a>
     </div>
     <div class="dash-insights">
-        <span><i class="bi bi-graph-up-arrow me-1"></i> Nilai bulan ini: <strong>{{ $growth === null ? 'belum ada pembanding' : ($growth > 0 ? '+' : '').$growth.'%' }}</strong> vs bulan lalu (sementara)</span>
+        <span><i class="bi bi-graph-up-arrow me-1"></i> Nilai bulan terakhir: <strong>{{ $growth === null ? 'belum ada pembanding' : ($growth > 0 ? '+' : '').$growth.'%' }}</strong> vs bulan sebelumnya di rentang</span>
         <span><i class="bi bi-pie-chart me-1"></i> Porsi belum lunas: <strong>{{ $totalNominal > 0 ? round($totalBelumDibayar / $totalNominal * 100, 1) : 0 }}%</strong></span>
         <span><i class="bi bi-bullseye me-1"></i> <strong>{{ $charts['planCounts'][0] }} / {{ $plans->count() }}</strong> rencana mencapai kuota</span>
     </div>
@@ -93,12 +95,12 @@
     </div>
     <div class="dash-footer"><span>Klik grafik tren, status, jenis media, atau peringkat untuk membuka data terkait.</span><span>Nilai dalam juta rupiah · diperbarui {{ now('Asia/Jakarta')->format('d/m/Y H:i') }} WIB</span></div>
     <details class="dash-details">
-        <summary>Rincian {{ $plans->count() }} rencana iklan bulan ini <span class="text-muted fw-normal">— buka untuk melihat perusahaan & kuota</span></summary>
+        <summary>Rincian {{ $plans->count() }} rencana iklan periode pilihan <span class="text-muted fw-normal">— buka untuk melihat perusahaan & kuota</span></summary>
         <div class="table-responsive mt-3"><table class="table table-custom mb-0"><thead><tr><th>Perusahaan</th><th>Media</th><th>Kuota</th><th>Realisasi</th><th>Capaian</th></tr></thead><tbody>
             @forelse ($plans as $plan)
                 <tr><td><a href="{{ route('plans.edit', $plan) }}">{{ $plan->company->nama_perusahaan ?? 'Perusahaan dihapus' }}</a></td><td>{{ $plan->media->nama_media ?? 'Media dihapus' }}</td><td>{{ $plan->kuota }}</td><td>{{ $plan->advertorials_count }}</td><td>{{ $plan->kuota > 0 ? min(100, round($plan->advertorials_count / $plan->kuota * 100)) : 100 }}%</td></tr>
             @empty
-                <tr><td colspan="5" class="text-muted text-center">Belum ada rencana bulan ini. <a href="{{ route('plans.create') }}">Buat rencana</a></td></tr>
+                <tr><td colspan="5" class="text-muted text-center">Belum ada rencana di periode ini. <a href="{{ route('plans.create') }}">Buat rencana</a></td></tr>
             @endforelse
         </tbody></table></div>
     </details>
@@ -149,7 +151,7 @@
         if (round) { options.cutout = '68%'; options.plugins.tooltip.callbacks.title = () => ''; }
         else {
             options.scales = {
-                x:{stacked, beginAtZero:horizontal, grid:{display:horizontal, color:'#eff3f8'}, border:{display:false}, ticks:horizontal ? valueTicks : {maxRotation:0, autoSkip:false, font:{size:9}}},
+                x:{stacked, beginAtZero:horizontal, grid:{display:horizontal, color:'#eff3f8'}, border:{display:false}, ticks:horizontal ? valueTicks : {maxRotation:0, autoSkip:true, maxTicksLimit:6, font:{size:9}}},
                 y:{stacked, beginAtZero:!horizontal, grid:{display:!horizontal, color:'#eff3f8'}, border:{display:false}, ticks:horizontal ? {font:{size:9}, callback:function(v) { const text = this.getLabelForValue(v); return text.length > 22 ? text.slice(0,11) + '…' + text.slice(-10) : text; }} : valueTicks}
             };
         }

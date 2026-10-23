@@ -4,14 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Advertorial;
 use App\Models\AdvertisingPlan;
+use App\Support\MonthRange;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $today = now()->locale('id')->startOfDay();
-        $start = $today->copy()->startOfMonth()->subMonths(5);
-        $end = $today->copy()->endOfMonth();
+        [$start, $end] = MonthRange::resolve($request, 6);
+        $monthCount = $start->diffInMonths($end->copy()->startOfMonth()) + 1;
         $records = Advertorial::with(['company', 'media'])
             ->whereBetween('tanggal_kwitansi', [$start, $end])->get();
         $totalData = $records->count();
@@ -29,7 +31,7 @@ class DashboardController extends Controller
         $monthly = [];
         $paymentRecords = Advertorial::where('status', 'sudah_dibayar')
             ->whereBetween('tanggal_dibayar', [$start, $end])->get();
-        for ($i = 0; $i < 6; $i++) {
+        for ($i = 0; $i < $monthCount; $i++) {
             $month = $start->copy()->addMonths($i);
             $key = $month->format('Y-m');
             $rows = $records->filter(fn ($row) => $row->tanggal_kwitansi->format('Y-m') === $key);
@@ -69,7 +71,12 @@ class DashboardController extends Controller
         }
 
         $plans = AdvertisingPlan::with(['company', 'media'])->withCount('advertorials')
-            ->where('bulan', $today->month)->where('tahun', $today->year)->get();
+            ->where(function ($query) use ($start, $monthCount) {
+                for ($i = 0; $i < $monthCount; $i++) {
+                    $periodMonth = $start->copy()->addMonths($i);
+                    $query->orWhere(fn ($q) => $q->where('bulan', $periodMonth->month)->where('tahun', $periodMonth->year));
+                }
+            })->get();
         $planCounts = [
             $plans->filter(fn ($plan) => $plan->advertorials_count >= $plan->kuota)->count(),
             $plans->filter(fn ($plan) => $plan->advertorials_count > 0 && $plan->advertorials_count < $plan->kuota)->count(),
@@ -78,8 +85,8 @@ class DashboardController extends Controller
         $quota = $plans->sum('kuota');
         $realized = $plans->sum(fn ($plan) => min($plan->advertorials_count, $plan->kuota));
         $planRate = $quota > 0 ? round($realized / $quota * 100, 1) : 0;
-        $last = $monthly[5]['nominal'];
-        $previous = $monthly[4]['nominal'];
+        $last = $monthly[$monthCount - 1]['nominal'];
+        $previous = $monthCount > 1 ? $monthly[$monthCount - 2]['nominal'] : 0;
         $growth = $previous > 0 ? round(($last - $previous) / $previous * 100, 1) : null;
         $charts = compact('monthly', 'statusCounts', 'typeValues', 'topCompanies', 'topMedia', 'aging', 'planCounts');
         $period = $start->translatedFormat('M Y').' – '.$end->translatedFormat('M Y');
@@ -87,7 +94,7 @@ class DashboardController extends Controller
         return view('dashboard.index', compact(
             'charts', 'period', 'totalData', 'totalNominal', 'totalSudahDibayar',
             'totalBelumDibayar', 'paidRate', 'overdueTotal', 'overdue', 'growth',
-            'plans', 'planRate', 'realized', 'quota', 'start', 'end'
+            'plans', 'planRate', 'realized', 'quota', 'start', 'end', 'monthCount'
         ));
     }
 }

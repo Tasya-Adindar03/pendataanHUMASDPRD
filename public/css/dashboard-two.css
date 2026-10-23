@@ -151,3 +151,8 @@
 .d2-simulation label {font-size:8px;white-space:nowrap;}.d2-simulation output {font-weight:700;}
 .d2-simulation input {width:100%;height:9px;accent-color:#c16479;cursor:ew-resize;}
 .d2-simulation small {grid-column:1/-1;font-size:8px;color:#946274;line-height:1.3;}
+.d2-filter {min-width:350px;}.d2-filter input {width:115px;}
+.d2-tools select {font-size:9px;border:1px solid #dce5ef;border-radius:6px;padding:3px;background:#fff;color:#41617d;max-width:120px;}
+.d2-heat-months {grid-template-columns:repeat(3,minmax(0,1fr));}
+.d2-heat-months .d2-day {flex-direction:column;gap:2px;min-height:22px;}.d2-heat-months small {font-size:7px;}
+@media(max-width:700px){.d2-filter {min-width:0;}.d2-filter input {width:100%;}.d2-filter .d-flex {flex-wrap:wrap;}.d2-heat-months .d2-day {min-height:40px;}}

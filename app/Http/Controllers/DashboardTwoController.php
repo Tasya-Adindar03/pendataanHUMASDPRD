@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Advertorial;
 use App\Models\AdvertisingPlan;
 use Carbon\Carbon;
+use App\Support\MonthRange;
 use Illuminate\Http\Request;
 
 class DashboardTwoController extends Controller
@@ -19,9 +20,12 @@ class DashboardTwoController extends Controller
             'media_id' => ['nullable', 'integer', 'min:1'],
             'hari' => ['nullable', 'integer', 'between:1,31'],
             'aging' => ['nullable', 'integer', 'between:0,4'],
+            'tanggal' => ['nullable', 'date_format:Y-m-d'],
+            'periode' => ['nullable', 'date_format:Y-m'],
         ]);
-        $month = Carbon::createFromFormat('!Y-m', $request->input('bulan') ?: now()->format('Y-m'))->locale('id');
-        $end = $month->copy()->endOfMonth();
+        [$month, $end] = MonthRange::resolve($request);
+        $monthCount = $month->diffInMonths($end->copy()->startOfMonth()) + 1;
+        $periodLabel = $monthCount === 1 ? $month->translatedFormat('F Y') : $month->translatedFormat('M Y').' – '.$end->translatedFormat('M Y');
         $today = now()->startOfDay();
         $query = Advertorial::with(['company', 'media'])->whereBetween('tanggal_kwitansi', [$month, $end]);
         $apply = function ($query) use ($request) {
@@ -32,6 +36,11 @@ class DashboardTwoController extends Controller
         };
         $apply($query);
         if ($request->filled('hari')) { $query->whereDay('tanggal_kwitansi', $request->integer('hari')); }
+        if ($request->filled('tanggal')) { $query->whereDate('tanggal_kwitansi', $request->input('tanggal')); }
+        if ($request->filled('periode')) {
+            $focusMonth = Carbon::createFromFormat('!Y-m', $request->input('periode'));
+            $query->whereBetween('tanggal_kwitansi', [$focusMonth, $focusMonth->copy()->endOfMonth()]);
+        }
         $rows = $query->get();
         $ageBucket = function ($row) use ($today) {
             if ($row->status === 'sudah_dibayar') { return null; }
@@ -46,10 +55,10 @@ class DashboardTwoController extends Controller
         $outstanding = (float) $unpaid->sum('nominal');
         $overdueRows = $unpaid->filter(fn ($row) => $row->tanggal_jatuh_tempo && $row->tanggal_jatuh_tempo->lt($today));
         $overdue = (float) $overdueRows->sum('nominal');
-        $previous = $month->copy()->subMonth();
-        $previousQuery = Advertorial::whereBetween('tanggal_kwitansi', [$previous, $previous->copy()->endOfMonth()]);
+        $previous = $month->copy()->subMonths($monthCount);
+        $previousQuery = Advertorial::whereBetween('tanggal_kwitansi', [$previous, $month->copy()->subDay()->endOfDay()]);
         $apply($previousQuery);
-        $previousTotal = $request->filled('hari') || $request->filled('aging') ? 0 : (float) $previousQuery->sum('nominal');
+        $previousTotal = $request->filled('hari') || $request->filled('aging') || $request->filled('tanggal') || $request->filled('periode') ? 0 : (float) $previousQuery->sum('nominal');
         $growth = $previousTotal > 0 ? round(($total - $previousTotal) / $previousTotal * 100, 1) : null;
         $paidRate = $total > 0 ? round($paid / $total * 100, 1) : 0;
         $statusKeys = ['sudah_dibayar', 'belum_dibayar', 'jatuh_tempo'];
@@ -58,8 +67,8 @@ class DashboardTwoController extends Controller
         $daily = [];
         $cumulative = 0;
         $cumulativePaid = 0;
-        for ($day = 1; $day <= $month->daysInMonth; $day++) {
-            $date = $month->copy()->day($day);
+        for ($date = $month->copy(); $date->lte($end); $date->addDay()) {
+            $day = $date->day;
             $group = $rows->filter(fn ($row) => $row->tanggal_kwitansi->isSameDay($date));
             $value = (float) $group->sum('nominal');
             $cumulative += $value;
@@ -88,7 +97,12 @@ class DashboardTwoController extends Controller
             $bucket = $ageBucket($row);
             $aging[$bucket] += (float) $row->nominal;
         }
-        $planQuery = AdvertisingPlan::where('bulan', $month->month)->where('tahun', $month->year)->withCount('advertorials');
+        $planQuery = AdvertisingPlan::withCount('advertorials')->where(function ($query) use ($month, $monthCount) {
+            for ($i = 0; $i < $monthCount; $i++) {
+                $periodMonth = $month->copy()->addMonths($i);
+                $query->orWhere(fn ($q) => $q->where('bulan', $periodMonth->month)->where('tahun', $periodMonth->year));
+            }
+        });
         foreach (['company_id', 'media_id'] as $field) {
             if ($request->filled($field)) { $planQuery->where($field, $request->input($field)); }
         }
@@ -104,25 +118,31 @@ class DashboardTwoController extends Controller
             'daily' => $daily, 'status' => $statusValues, 'companies' => $companies->take(5)->values()->all(),
             'media' => $media, 'type' => $typeValues, 'aging' => $aging,
             'total' => $total, 'paid' => $paid, 'outstanding' => $outstanding,
-            'quota' => $quota, 'realized' => $realized,
+            'quota' => $quota, 'realized' => $realized, 'monthCount' => $monthCount,
         ];
 
-        $focus = $request->only(['tipe', 'status', 'company_id', 'media_id', 'hari', 'aging']);
+        $focus = $request->only(['tipe', 'status', 'company_id', 'media_id', 'hari', 'aging', 'tanggal', 'periode']);
         $focusNames = [];
         foreach ($focus as $key => $value) {
             if ($value === null || $value === '') { continue; }
             $focusNames[$key] = match ($key) {
                 'tipe' => 'Media '.ucfirst($value),
                 'status' => ['sudah_dibayar' => 'Lunas', 'belum_dibayar' => 'Belum dibayar', 'jatuh_tempo' => 'Status jatuh tempo'][$value],
-                'hari' => 'Tanggal '.$value,
+                'hari' => 'Hari ke-'.$value,
+                'tanggal' => 'Tanggal '.$value,
+                'periode' => 'Fokus bulan '.$value,
                 'aging' => ['Belum lewat tenggat', 'Lewat 1–30 hari', 'Lewat 31–60 hari', 'Lewat >60 hari', 'Tanpa tenggat'][(int) $value],
                 'company_id' => 'Perusahaan #'.$value,
                 'media_id' => 'Media #'.$value,
             };
         }
         $detailRows = $rows->sortByDesc('nominal')->take(50);
+        $monthTiles = collect($daily)->groupBy(fn ($day) => substr($day['date'], 0, 7))->map(fn ($days, $key) => [
+            'key' => $key, 'label' => Carbon::createFromFormat('!Y-m', $key)->locale('id')->translatedFormat('M Y'),
+            'value' => $days->sum('value'), 'count' => $days->sum('count'),
+        ])->values()->all();
         return view('dashboard.two', compact(
-            'focus', 'focusNames', 'detailRows',
+            'focus', 'focusNames', 'detailRows', 'monthCount', 'periodLabel', 'monthTiles',
             'month', 'end', 'total', 'paid', 'outstanding', 'overdue', 'overdueRows',
             'growth', 'previousTotal', 'paidRate', 'daily', 'debtor', 'count', 'peak',
             'quota', 'realized', 'planRate', 'planDone', 'plans', 'chartData'
