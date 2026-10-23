@@ -1,66 +1,72 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Pendataan HUMAS DPRD
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 9 application for managing companies, media, advertising plans, advertorials, payments, and PDF/Excel exports.
 
-## About Laravel
+## Requirements
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Install Docker Engine/Desktop with Docker Compose v2 or later. Docker builds install PHP 8.2, Composer 2.8, all locked Composer packages (including PHPUnit), required PHP extensions, and frontend assets using Node.js 22 and `npm ci`. PHP, Composer, Node.js, and MySQL do not need to be installed on the host.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+The local stack includes MySQL 8.4 and Mailpit. Cache and sessions use files; queues run synchronously, so Redis and a queue worker are not required. This setup uses Laravel's development server and is intended for local development.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## First run
 
-## Learning Laravel
+From the repository root:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```sh
+cp .env.example .env
+docker compose build
+docker compose run --rm --no-deps app php artisan key:generate --show
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Copy the printed `base64:...` key into `APP_KEY=` in `.env`, then start the application:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```sh
+docker compose up -d
+docker compose exec app php artisan migrate
+```
 
-## Laravel Sponsors
+Open <http://localhost:8000>. Mail sent by the application appears in Mailpit at <http://localhost:8025>. The database seeder is currently empty; enter companies, media, and advertising plans through the application.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+Compose supplies the internal database hostname `db` and mail hostname `mailpit`. The database is not exposed to the host. Set `DB_DATABASE`, `DB_USERNAME` (a non-root user), `DB_PASSWORD`, and `DB_ROOT_PASSWORD` in `.env` before the first startup if you want different credentials. The defaults are for local use. MySQL initializes these credentials only when its data volume is empty.
 
-### Premium Partners
+To change ports, set `APP_PORT` and `MAILPIT_PORT` in `.env`; also update `APP_URL` to match the app port. After changing `.env`, run `docker compose up -d --force-recreate app`.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+Uploads and database data persist in named Docker volumes. The entrypoint creates the public storage link. Keep the same application key across restarts.
 
-## Contributing
+## Development and dependencies
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+The image contains a snapshot of the source code and built Vite assets. After editing source, dependency manifests, or lockfiles, rebuild:
 
-## Code of Conduct
+```sh
+docker compose up -d --build app
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+All PHP and JavaScript dependencies are declared in `composer.json` and `package.json`, with exact versions in their lockfiles. The Docker build runs `composer install`, `composer check-platform-reqs`, `npm ci`, and `npm run build`. Commit updated lockfiles when changing dependencies.
 
-## Security Vulnerabilities
+Useful commands:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```sh
+docker compose logs -f app
+docker compose exec app php artisan migrate:status
+docker compose exec app php artisan optimize:clear
+docker compose exec app composer check-platform-reqs
+docker compose down
+```
 
-## License
+`docker compose down` preserves data. `docker compose down --volumes` deletes the database and uploaded files; use it only when intentionally resetting local data.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Testing
+
+Build the image and configure `APP_KEY` as above, then run:
+
+```sh
+docker compose run --rm --no-deps app php artisan test
+docker compose run --rm --no-deps app php artisan test --testsuite=Unit
+docker compose run --rm --no-deps app php artisan test --filter=AuthenticationTest
+```
+
+`phpunit.xml` forces an in-memory SQLite database for tests, protecting the MySQL development database. The image includes the SQLite PDO extension. Tests using `RefreshDatabase` apply migrations automatically. There is no JavaScript test runner configured; `npm run build` during image creation validates the frontend build.
+
+The repository includes Breeze authentication tests, but `routes/web.php` currently does not load `routes/auth.php`. Those tests can fail with missing routes/404 responses. The existing feature example also expects HTTP 200 at `/`, which currently redirects to `/dashboard`. These application/test mismatches are independent of the container setup.
+
+For a manual smoke test after migrating, visit `/dashboard`, `/companies`, `/media`, `/plans`, and `/advertorials`, then create a company and media entry before adding an advertising plan or advertorial.
