@@ -47,6 +47,11 @@
         .dash-heading { align-items:flex-start; flex-direction:column; } .chart-frame { height:180px; }
     }
 .dash-range {display:flex;gap:7px;align-items:end;flex-wrap:wrap;font-size:10px;} .dash-range label {display:grid;gap:3px;color:#718096;} .dash-range input,.dash-range button,.dash-range a {padding:5px 7px;border:1px solid #dce5ef;border-radius:6px;background:#fff;color:#37536e;font-size:10px;}
+.chart-card.is-expanded {position:fixed;inset:4vh 4vw;z-index:1050;box-shadow:0 0 0 100vmax #112638bb;display:flex;flex-direction:column;padding:22px;}
+    .chart-card.is-expanded .chart-frame {flex:1;min-height:0;height:auto;}
+    .chart-card.is-expanded .chart-heading h2 {font-size:18px;}
+    .chart-card.is-expanded .chart-note {font-size:12px;white-space:normal;}
+    .chart-card.is-expanded .chart-download {font-size:18px;}
 </style>
 @php
     $money = fn ($value) => 'Rp '.number_format($value / 1000000, 1, ',', '.').' jt';
@@ -87,7 +92,7 @@
     <div class="dash-grid">
         @foreach ($cards as [$id, $title, $note])
             <section class="chart-card" id="card-{{ $id }}" aria-labelledby="title-{{ $id }}">
-                <div class="chart-heading"><h2 id="title-{{ $id }}"><span class="chart-number">{{ sprintf('%02d', $loop->iteration) }}</span>{{ $title }}</h2><button type="button" class="chart-download" data-chart="{{ $id }}" title="Unduh {{ $title }}" aria-label="Unduh {{ $title }} sebagai PNG"><i class="bi bi-download"></i></button></div>
+                <div class="chart-heading"><h2 id="title-{{ $id }}"><span class="chart-number">{{ sprintf('%02d', $loop->iteration) }}</span>{{ $title }}</h2><div class="d-flex gap-2"><button type="button" class="chart-download" data-expand-card="{{ $id }}" aria-expanded="false" aria-label="Perbesar {{ $title }}" title="Perbesar kartu"><i class="bi bi-arrows-fullscreen"></i></button><button type="button" class="chart-download" data-chart="{{ $id }}" title="Unduh {{ $title }}" aria-label="Unduh {{ $title }} sebagai PNG"><i class="bi bi-download"></i></button></div></div>
                 <div class="chart-frame"><canvas id="chart-{{ $id }}" role="img" aria-label="{{ $title }}. {{ $note }}"></canvas><div class="chart-empty">Belum ada data untuk periode ini</div></div>
                 <p class="chart-note" title="{{ $note }}">{{ $note }}</p>
             </section>
@@ -171,6 +176,21 @@
         const link = document.createElement('a');
         link.href = charts[id].toBase64Image(); link.download = 'dashboard-' + id + '.png'; link.click();
     }));
+    function closeExpandedCard() {
+        const card = document.querySelector('.chart-card.is-expanded');
+        if(!card) return;
+        card.classList.remove('is-expanded');
+        const button=card.querySelector('[data-expand-card]');
+        button.setAttribute('aria-expanded','false');button.title='Perbesar kartu';button.querySelector('i').className='bi bi-arrows-fullscreen';button.focus();
+        Object.values(charts).forEach(chart=>chart.resize());
+    }
+    document.querySelectorAll('[data-expand-card]').forEach(button=>button.addEventListener('click',()=>{
+        const card=document.getElementById('card-'+button.dataset.expandCard);
+        const wasExpanded=card.classList.contains('is-expanded');closeExpandedCard();
+        if(!wasExpanded) {card.classList.add('is-expanded');button.setAttribute('aria-expanded','true');button.title='Kecilkan kartu (Esc)';button.querySelector('i').className='bi bi-fullscreen-exit';}
+        Object.values(charts).forEach(chart=>chart.resize());
+    }));
+    document.addEventListener('keydown',event=>{if(event.key==='Escape')closeExpandedCard();});
     new ResizeObserver(() => Object.values(charts).forEach(chart => chart.resize())).observe(document.querySelector('.dash-grid'));
 })();
 </script>

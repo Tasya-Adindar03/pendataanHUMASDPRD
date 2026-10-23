@@ -71,6 +71,7 @@ window.initDashboardTwo = () => {
     });
     function render(id, type, labels, datasets, options, hasData) {
         const panel = document.getElementById('panel-' + id);
+        panel.classList.add('d2-expandable');
         panel.dataset.originalTitle ??= panel.querySelector('h3').textContent;
         panel.querySelector('h3').textContent = panel.dataset.originalTitle;
         panel.dataset.originalSub ??= panel.querySelector('.d2-panel-sub').textContent;
@@ -352,10 +353,12 @@ window.initDashboardTwo = () => {
         dialog.showModal();
     };
     function collapse() {
-        const panel = document.querySelector('.d2-panel.is-expanded');
+        const panel = document.querySelector('.d2-expandable.is-expanded');
         if (!panel) return;
         panel.classList.remove('is-expanded');
         panel.querySelector('[data-expand-chart]').setAttribute('aria-expanded','false');
+        panel.querySelector('[data-expand-chart]').textContent='⛶';
+        panel.querySelector('[data-expand-chart]').title='Perbesar kartu';
         panel.querySelector('[data-expand-chart]').focus();
         (window.d2Charts || []).forEach(chart => chart.resize());
     }
@@ -375,7 +378,7 @@ window.initDashboardTwo = () => {
         } else if (target.hasAttribute('data-expand-chart')) {
             const panel = document.getElementById('panel-' + target.dataset.expandChart);
             const expanded = panel.classList.contains('is-expanded'); collapse();
-            if(!expanded) {panel.classList.add('is-expanded');target.setAttribute('aria-expanded','true');}
+            if(!expanded) {panel.classList.add('is-expanded');target.setAttribute('aria-expanded','true');target.textContent='×';target.title='Kecilkan kartu (Esc)';}
             (window.d2Charts || []).forEach(chart => chart.resize());
         } else if (target.hasAttribute('data-download-chart')) {
             const chart = (window.d2Charts || []).find(item => item.canvas.id === 'd2-' + target.dataset.downloadChart);

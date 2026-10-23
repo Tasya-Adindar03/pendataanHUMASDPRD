@@ -167,3 +167,13 @@
 .d2-tooltip-row {display:flex;align-items:baseline;gap:7px;}
 .d2-tooltip-row + .d2-tooltip-row {margin-top:4px;}
 .d2-tooltip-row i {display:inline-block;width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.d2-card-expand {border:0;border-radius:4px;background:#eef3f8;color:#57718b;font-size:11px;padding:2px 5px;line-height:1.2;}
+.d2-mini-heading h3 {flex:1;}.d2-mini-heading .d2-card-expand {order:3;}
+.d2-mini-panel.is-expanded {position:fixed;inset:5vh 5vw;z-index:1050;box-shadow:0 0 0 100vmax #112638bb;display:flex;flex-direction:column;padding:24px;border-radius:18px;}
+.d2-mini-panel.is-expanded .d2-mini-canvas {flex:1;height:auto;min-height:0;}
+.d2-mini-panel.is-expanded h3 {font-size:19px;}.d2-mini-panel.is-expanded strong {font-size:14px;}.d2-mini-panel.is-expanded small {font-size:12px;white-space:normal;margin-top:12px;}
+.d2-expandable.is-expanded [data-expand-chart] {font-size:22px;min-width:32px;min-height:32px;}
+#panel-calendar.is-expanded .d2-heat {flex:1;min-height:0;grid-auto-rows:minmax(0,1fr);}
+#panel-calendar.is-expanded .d2-day {height:auto;font-size:18px;}
+#panel-calendar.is-expanded .d2-daylabel {font-size:13px;}
+#panel-calendar.is-expanded .d2-heat-months small {font-size:13px;}
