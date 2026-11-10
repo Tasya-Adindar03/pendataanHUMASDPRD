@@ -13,20 +13,20 @@ class Advertorial extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-    'company_id',
-    'media_id',
-    'plan_id',
-    'judul',
-    'waktu_tayang',
-    'tanggal_kwitansi',
-    'tanggal_jatuh_tempo',
-    'tanggal_dibayar',
-    'nominal',
-    'status',
-    'no_invoice',
-    'file_kwitansi',
-    'catatan',
-    'created_by',
+        'company_id',
+        'media_id',
+        'plan_id',
+        'judul',
+        'waktu_tayang',
+        'tanggal_kwitansi',
+        'tanggal_jatuh_tempo',
+        'tanggal_dibayar',
+        'nominal',
+        'status',
+        'no_invoice',
+        'file_kwitansi',
+        'catatan',
+        'created_by',
     ];
 
     protected $casts = [
@@ -44,14 +44,14 @@ class Advertorial extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public function plan(): BelongsTo
-    {
-        return $this->belongsTo(AdvertisingPlan::class);
-    }
-
     public function media(): BelongsTo
     {
         return $this->belongsTo(Media::class);
+    }
+
+    public function plan(): BelongsTo
+    {
+        return $this->belongsTo(AdvertisingPlan::class, 'plan_id');
     }
 
     public function creator(): BelongsTo
@@ -59,7 +59,7 @@ class Advertorial extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    // ==== Scopes untuk filter cepat ====
+    // ==== Scopes ====
 
     public function scopeCetak($query)
     {
@@ -86,7 +86,17 @@ class Advertorial extends Model
         return $query->where('status', 'jatuh_tempo');
     }
 
-    // ==== Auto-generate no_invoice saat data dibuat ====
+    // ==== Ubah "belum_dibayar" menjadi "jatuh_tempo" bila tenggat sudah lewat ====
+
+    public static function syncOverdue(): int
+    {
+        return static::where('status', 'belum_dibayar')
+            ->whereNotNull('tanggal_jatuh_tempo')
+            ->whereDate('tanggal_jatuh_tempo', '<', now()->toDateString())
+            ->update(['status' => 'jatuh_tempo']);
+    }
+
+    // ==== Auto-generate no_invoice ====
 
     protected static function booted(): void
     {
@@ -101,7 +111,6 @@ class Advertorial extends Model
     {
         $prefix = 'INV-' . now()->format('Ym') . '-';
 
-        // ambil nomor urut terakhir bulan ini
         $lastNumber = static::withTrashed()
             ->where('no_invoice', 'like', $prefix . '%')
             ->orderByDesc('no_invoice')
@@ -114,7 +123,7 @@ class Advertorial extends Model
         return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
-    // ==== Helper untuk aging (umur piutang) ====
+    // ==== Sisa hari menuju tenggat (positif = masih ada waktu, negatif = terlambat) ====
 
     public function getUmurPiutangAttribute(): ?int
     {
@@ -122,6 +131,6 @@ class Advertorial extends Model
             return null;
         }
 
-        return now()->diffInDays($this->tanggal_jatuh_tempo, false); // negatif = sudah lewat tenggat
+        return (int) today()->diffInDays($this->tanggal_jatuh_tempo, false);
     }
-}  
+}

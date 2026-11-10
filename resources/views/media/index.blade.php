@@ -1,9 +1,9 @@
 @extends('layouts.app')
-@section('title', 'Kelola Media')
+@section('title', 'Kelola Media & Kuota')
 
 @section('content')
     <div class="card-custom">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
             <form method="GET" class="d-flex gap-2">
                 <input type="text" name="search" class="form-control form-control-sm" placeholder="Cari nama media..." value="{{ request('search') }}">
                 <select name="tipe" class="form-select form-select-sm">
@@ -45,13 +45,16 @@
                             <td>{{ $media->pic_kontak ?? '-' }}</td>
                             <td>{{ $media->advertorials()->count() }}</td>
                             <td>
-                                <a href="{{ route('media.edit', $media) }}" class="btn btn-sm btn-outline-primary">
+                                <a href="{{ route('media.show', $media) }}" class="btn btn-sm btn-outline-success" title="Atur kuota">
+                                    <i class="bi bi-clipboard-data"></i> Kuota
+                                </a>
+                                <a href="{{ route('media.edit', $media) }}" class="btn btn-sm btn-outline-primary" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 <form action="{{ route('media.destroy', $media) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus media ini?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>

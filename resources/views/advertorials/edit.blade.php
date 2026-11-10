@@ -14,6 +14,10 @@
             </div>
         @endif
 
+        @php
+            $statusLama = $advertorial->status === 'sudah_dibayar' ? 'sudah' : 'belum';
+        @endphp
+
         <form action="{{ route('advertorials.update', $advertorial) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
@@ -21,7 +25,7 @@
             <div class="mb-3">
                 <label class="form-label">Perusahaan</label>
                 <div class="input-group">
-                    <select name="company_id" class="form-select" required>
+                    <select name="company_id" id="company_id" class="form-select" required>
                         <option value="">-- Pilih Perusahaan --</option>
                         @foreach ($companies as $company)
                             <option value="{{ $company->id }}" @selected(old('company_id', $advertorial->company_id) == $company->id)>{{ $company->nama_perusahaan }}</option>
@@ -35,7 +39,7 @@
 
             <div class="mb-3">
                 <label class="form-label">Media</label>
-                <select name="media_id" class="form-select" required>
+                <select name="media_id" id="media_id" class="form-select" required>
                     <option value="">-- Pilih Media --</option>
                     @foreach ($mediaList as $media)
                         <option value="{{ $media->id }}" @selected(old('media_id', $advertorial->media_id) == $media->id)>{{ $media->nama_media }} ({{ ucfirst($media->tipe) }})</option>
@@ -44,16 +48,12 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Planning Iklan (opsional)</label>
-                <select name="plan_id" class="form-select">
-                    <option value="">-- Pilih Planning Iklan --</option>
-                    @foreach ($plans as $plan)
-                        <option value="{{ $plan->id }}" @selected(old('plan_id', $advertorial->plan_id) == $plan->id)>
-                            {{ \Carbon\Carbon::create()->month($plan->bulan)->translatedFormat('F') }} {{ $plan->tahun }} - {{ $plan->company->nama_perusahaan }} - {{ $plan->media->nama_media }}
-                        </option>
-                    @endforeach
+                <label class="form-label">Termasuk Planning Iklan? (opsional)</label>
+                <select name="plan_id" id="plan_id" class="form-select">
+                    <option value="">-- Tidak termasuk planning manapun --</option>
                 </select>
-                <small class="text-muted">Jika data ini terkait dengan planning iklan yang sudah dibuat, pilih planning iklan yang sesuai. Jika tidak, biarkan kosong.</small>
+                <small class="text-muted">Pilihan otomatis muncul sesuai Perusahaan dan Media yang dipilih</small>
+            </div>
 
             <div class="mb-3">
                 <label class="form-label">Judul Advertorial / Rilis</label>
@@ -70,10 +70,6 @@
                     <input type="date" name="tanggal_kwitansi" class="form-control" value="{{ old('tanggal_kwitansi', $advertorial->tanggal_kwitansi->format('Y-m-d')) }}" required>
                 </div>
             </div>
-
-            @php
-                $statusLama = $advertorial->status === 'sudah_dibayar' ? 'sudah' : 'belum';
-            @endphp
 
             <div class="mb-3">
                 <label class="form-label d-block">Status Pembayaran</label>
@@ -141,33 +137,28 @@
         document.addEventListener('DOMContentLoaded', function () {
             initRupiahInput('nominal_display', 'nominal');
 
-            const companySelect = document.querySelector('select[name="company_id"]');
-            const mediaSelect = document.querySelector('select[name="media_id"]');
+            const companySelect = document.getElementById('company_id');
+            const mediaSelect = document.getElementById('media_id');
             const planSelect = document.getElementById('plan_id');
 
             function updatePlanOptions(preselectId = null) {
-                const companyId = companySelect.value;
-                const mediaId = mediaSelect.value;
-
                 planSelect.innerHTML = '<option value="">-- Tidak termasuk planning manapun --</option>';
 
-                if (!companyId || !mediaId) return;
+                if (!companySelect.value || !mediaSelect.value) return;
 
-                const filtered = allPlans.filter(p => p.company_id == companyId && p.media_id == mediaId);
-
-                filtered.forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p.id;
-                    opt.textContent = p.label;
-                    if (preselectId && p.id == preselectId) opt.selected = true;
-                    planSelect.appendChild(opt);
-                });
+                allPlans
+                    .filter(p => p.company_id == companySelect.value && p.media_id == mediaSelect.value)
+                    .forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p.id;
+                        opt.textContent = p.label;
+                        if (preselectId && p.id == preselectId) opt.selected = true;
+                        planSelect.appendChild(opt);
+                    });
             }
 
             companySelect.addEventListener('change', () => updatePlanOptions());
             mediaSelect.addEventListener('change', () => updatePlanOptions());
-
-            // set kondisi awal saat halaman dibuka (data lama)
             updatePlanOptions(selectedPlanId);
 
             const radioBelum = document.getElementById('status_belum');

@@ -22,9 +22,9 @@
                     <td class="fw-semibold">{{ $item->no_invoice }}</td>
                     <td>
                         @if ($item->plan)
-                            <span class="badge-status badge-sudah">{{ $item->plan->nama_plan }}</span>
+                            <span class="badge bg-light text-dark">{{ $item->plan->label_periode }}</span>
                         @else
-                            <span class="badge-status badge-belum">Belum Ada Planning</span>
+                            <span class="text-muted">-</span>
                         @endif
                     </td>
                     <td>{{ $item->company->nama_perusahaan }}</td>
@@ -35,6 +35,15 @@
                     <td>
                         @if ($item->tanggal_jatuh_tempo)
                             {{ $item->tanggal_jatuh_tempo->format('d M Y') }}
+                            @if ($item->umur_piutang !== null)
+                                @if ($item->umur_piutang < 0)
+                                    <div class="small text-danger fw-semibold">Terlambat {{ abs($item->umur_piutang) }} hari</div>
+                                @elseif ($item->umur_piutang === 0)
+                                    <div class="small text-warning fw-semibold">Jatuh tempo hari ini</div>
+                                @else
+                                    <div class="small text-muted">{{ $item->umur_piutang }} hari lagi</div>
+                                @endif
+                            @endif
                         @else
                             -
                         @endif
@@ -65,7 +74,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="11" class="text-center text-muted py-4">Belum ada data.</td>
+                    <td colspan="12" class="text-center text-muted py-4">Belum ada data.</td>
                 </tr>
             @endforelse
         </tbody>

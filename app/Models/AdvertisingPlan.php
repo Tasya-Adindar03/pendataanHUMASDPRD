@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,7 +25,6 @@ class AdvertisingPlan extends Model
         return $this->belongsTo(Media::class);
     }
 
-    // relasi langsung: data advertorial yang eksplisit terhubung ke planning ini
     public function advertorials(): HasMany
     {
         return $this->hasMany(Advertorial::class, 'plan_id');
@@ -35,6 +35,7 @@ class AdvertisingPlan extends Model
         return $this->advertorials()->count();
     }
 
+    // Kuota yang masih tersisa
     public function getSisaKuotaAttribute(): int
     {
         return max($this->kuota - $this->realisasi, 0);
@@ -51,6 +52,6 @@ class AdvertisingPlan extends Model
 
     public function getLabelPeriodeAttribute(): string
     {
-        return \Carbon\Carbon::create()->month($this->bulan)->translatedFormat('F') . ' ' . $this->tahun;
+        return Carbon::create(null, (int) $this->bulan, 1)->translatedFormat('F') . ' ' . $this->tahun;
     }
 }

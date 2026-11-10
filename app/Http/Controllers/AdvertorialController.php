@@ -10,50 +10,31 @@ use Illuminate\Http\Request;
 
 class AdvertorialController extends Controller
 {
+    // Halaman gabungan Media Cetak & Online (tab: semua / cetak / online)
     public function index(Request $request)
     {
+        $tipe = in_array($request->get('tipe'), ['cetak', 'online']) ? $request->get('tipe') : null;
+
         $query = Advertorial::with(['company', 'media', 'plan']);
+
+        if ($tipe) {
+            $query->whereHas('media', fn ($q) => $q->where('tipe', $tipe));
+        }
+
         $this->applyFilters($query, $request);
         $advertorials = $query->latest('tanggal_kwitansi')->paginate(15)->withQueryString();
 
         $companies = Company::orderBy('nama_perusahaan')->get();
-        $mediaList = Media::orderBy('nama_media')->get();
+        $mediaList = Media::when($tipe, fn ($q) => $q->where('tipe', $tipe))->orderBy('nama_media')->get();
 
-        return view('advertorials.index', compact('advertorials', 'companies', 'mediaList'));
-    }
-
-    // Halaman gabungan Media Cetak & Online (dengan tab)
-    public function media(Request $request)
-    {
-        $tipe = in_array($request->get('tipe'), ['cetak', 'online']) ? $request->get('tipe') : 'cetak';
-
-        $query = Advertorial::with(['company', 'media', 'plan'])
-            ->whereHas('media', fn ($q) => $q->where('tipe', $tipe));
-        $this->applyFilters($query, $request);
-        $advertorials = $query->latest('tanggal_kwitansi')->paginate(15)->withQueryString();
-
-        $companies = Company::orderBy('nama_perusahaan')->get();
-        $mediaList = Media::where('tipe', $tipe)->orderBy('nama_media')->get();
-
-        // Ringkasan kuota per perusahaan untuk tipe media ini, bulan berjalan
-        $quotaSummary = AdvertisingPlan::with('company')
-            ->whereHas('media', fn ($q) => $q->where('tipe', $tipe))
+        // Ringkasan kuota bulan berjalan
+        $quotaSummary = AdvertisingPlan::with(['company', 'media'])
+            ->when($tipe, fn ($q) => $q->whereHas('media', fn ($m) => $m->where('tipe', $tipe)))
             ->where('bulan', now()->month)
             ->where('tahun', now()->year)
-            ->get()
-            ->groupBy('company_id')
-            ->map(function ($plans) {
-                $kuota = $plans->sum('kuota');
-                $realisasi = $plans->sum(fn ($p) => $p->realisasi);
-                return (object) [
-                    'company' => $plans->first()->company,
-                    'sisa' => max($kuota - $realisasi, 0),
-                    'realisasi' => $realisasi,
-                    'persentase' => $kuota > 0 ? min(round(($realisasi / $kuota) * 100), 100) : 0,
-                ];
-            });
+            ->get();
 
-        return view('advertorials.media', compact('advertorials', 'companies', 'mediaList', 'tipe', 'quotaSummary'));
+        return view('advertorials.index', compact('advertorials', 'companies', 'mediaList', 'tipe', 'quotaSummary'));
     }
 
     public function create()

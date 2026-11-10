@@ -131,6 +131,9 @@
         .btn-primary-custom { background: var(--primary); color: #fff; border: none; border-radius: 8px; font-weight: 500; padding: 0.55rem 1.1rem; }
         .btn-primary-custom:hover { background: var(--primary-light); color: #fff; }
 
+        .nav-pills .nav-link { color: var(--muted); font-weight: 600; font-size: 0.9rem; border-radius: 8px; }
+        .nav-pills .nav-link.active { background: var(--primary); color: #fff; }
+
         .form-label { font-weight: 600; font-size: 0.87rem; color: var(--text); }
         .form-control, .form-select { border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.9rem; }
         .form-control:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(49,130,206,0.12); }
@@ -163,10 +166,7 @@
             <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
                 <i class="bi bi-speedometer2"></i> <span class="link-label">Dashboard</span>
             </a>
-            <a class="nav-link {{ request()->routeIs('advertorials.index') ? 'active' : '' }}" href="{{ route('advertorials.index') }}">
-                <i class="bi bi-grid"></i> <span class="link-label">Semua Data</span>
-            </a>
-            <a class="nav-link {{ request()->routeIs('advertorials.media') ? 'active' : '' }}" href="{{ route('advertorials.media') }}">
+            <a class="nav-link {{ request()->routeIs('advertorials.index', 'advertorials.edit') ? 'active' : '' }}" href="{{ route('advertorials.index') }}">
                 <i class="bi bi-newspaper"></i> <span class="link-label">Media Cetak &amp; Online</span>
             </a>
             <a class="nav-link {{ request()->routeIs('advertorials.create') ? 'active' : '' }}" href="{{ route('advertorials.create') }}">
@@ -176,12 +176,17 @@
                 <i class="bi bi-building"></i> <span class="link-label">Kelola Perusahaan</span>
             </a>
             <a class="nav-link {{ request()->routeIs('media.*') ? 'active' : '' }}" href="{{ route('media.index') }}">
-                <i class="bi bi-collection"></i> <span class="link-label">Kelola Media</span>
+                <i class="bi bi-collection"></i> <span class="link-label">Kelola Media &amp; Kuota</span>
             </a>
-            <a class="nav-link {{ request()->routeIs('plans.*') ? 'active' : '' }}" href="{{ route('plans.index') }}">
-                <i class="bi bi-clipboard-data"></i> <span class="link-label">Planning Iklan</span>
-            </a>
+
+            @if (auth()->user()->isAdmin())
+                <a class="nav-link {{ request()->routeIs('users.*') ? 'active' : '' }}" href="{{ route('users.index') }}">
+                    <i class="bi bi-people"></i> <span class="link-label">Kelola User</span>
+                </a>
+            @endif
         </nav>
+
+        @include('partials.sidebar-user')
     </div>
 
     <div class="main-content" id="mainContent">
@@ -192,6 +197,12 @@
         @if (session('success'))
             <div class="alert alert-success d-flex align-items-center gap-2">
                 <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-circle-fill"></i> {{ session('error') }}
             </div>
         @endif
 

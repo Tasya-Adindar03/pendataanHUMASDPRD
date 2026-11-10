@@ -1,7 +1,10 @@
-<form method="GET" action="{{ url()->current() }}" class="row g-2 align-items-end mb-4">
-    @isset($tipe)
+<form method="GET" action="{{ route('advertorials.index') }}" class="row g-2 align-items-end mb-4">
+    @if (!empty($tipe))
         <input type="hidden" name="tipe" value="{{ $tipe }}">
-    @endisset
+    @endif
+    @if (request('plan_id'))
+        <input type="hidden" name="plan_id" value="{{ request('plan_id') }}">
+    @endif
 
     <div class="col-md-2">
         <label class="form-label">Status</label>
@@ -47,6 +50,6 @@
         <button type="submit" class="btn btn-sm btn-primary-custom w-100">
             <i class="bi bi-funnel"></i> Filter
         </button>
-        <a href="{{ url()->current() }}{{ isset($tipe) ? '?tipe='.$tipe : '' }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+        <a href="{{ route('advertorials.index', !empty($tipe) ? ['tipe' => $tipe] : []) }}" class="btn btn-sm btn-outline-secondary">Reset</a>
     </div>
 </form>

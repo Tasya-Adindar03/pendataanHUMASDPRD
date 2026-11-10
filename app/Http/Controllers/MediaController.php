@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdvertisingPlan;
+use App\Models\Company;
 use App\Models\Media;
 use Illuminate\Http\Request;
 
@@ -22,6 +24,24 @@ class MediaController extends Controller
         $mediaList = $query->orderBy('nama_media')->paginate(15)->withQueryString();
 
         return view('media.index', compact('mediaList'));
+    }
+
+    // Halaman kuota per media (pengganti halaman Planning Iklan)
+    public function show(Media $medium)
+    {
+        $plans = AdvertisingPlan::with('company')
+            ->where('media_id', $medium->id)
+            ->orderByDesc('tahun')
+            ->orderByDesc('bulan')
+            ->get();
+
+        $companies = Company::orderBy('nama_perusahaan')->get();
+
+        return view('media.show', [
+            'media' => $medium,
+            'plans' => $plans,
+            'companies' => $companies,
+        ]);
     }
 
     public function create()
