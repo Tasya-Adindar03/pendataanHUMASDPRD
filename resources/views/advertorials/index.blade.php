@@ -27,7 +27,12 @@
             </li>
         </ul>
 
-        @include('advertorials._export-buttons')
+        <div class="d-flex align-items-center gap-2">
+            @include('advertorials._export-buttons')
+            <a href="{{ route('advertorials.create') }}" class="btn btn-sm btn-primary-custom py-1 px-3">
+                <i class="bi bi-plus-lg"></i> Tambah Data
+            </a>
+        </div>
     </div>
 
     @if (request('plan_id'))

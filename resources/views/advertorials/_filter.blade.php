@@ -5,6 +5,9 @@
     @if (request('plan_id'))
         <input type="hidden" name="plan_id" value="{{ request('plan_id') }}">
     @endif
+    @if (request('search'))
+        <input type="hidden" name="search" value="{{ request('search') }}">
+    @endif
 
     <div class="col-md-2">
         <label class="form-label">Status</label>
