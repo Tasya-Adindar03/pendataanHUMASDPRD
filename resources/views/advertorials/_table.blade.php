@@ -1,5 +1,5 @@
 @if (request('search'))
-    <div class="d-flex align-items-center gap-2 mb-3">
+    <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
         <span class="badge bg-light text-dark border py-2 px-3">
             <i class="bi bi-search"></i> Hasil pencarian: <strong>{{ request('search') }}</strong>
         </span>
@@ -8,7 +8,7 @@
 @endif
 
 <div class="table-responsive">
-    <table class="table table-custom align-middle">
+    <table class="table table-custom table-stack align-middle">
         <thead>
             <tr>
                 <th>Perusahaan &amp; Media</th>
@@ -24,75 +24,89 @@
             @forelse ($advertorials as $item)
                 @php $umur = $item->umur_piutang; @endphp
                 <tr class="{{ $item->status === 'jatuh_tempo' ? 'row-overdue' : '' }}">
-                    <td>
-                        <div class="fw-semibold">{{ $item->company->nama_perusahaan ?? '-' }}</div>
-                        <div class="small text-muted">
-                            {{ $item->media->nama_media ?? '-' }}
-                            <span class="badge bg-light text-dark border">{{ ucfirst($item->media->tipe ?? '') }}</span>
+                    <td data-label="Perusahaan">
+                        <div class="cell">
+                            <div class="fw-semibold">{{ $item->company->nama_perusahaan ?? '-' }}</div>
+                            <div class="small text-muted">
+                                {{ $item->media->nama_media ?? '-' }}
+                                <span class="badge bg-light text-dark border">{{ ucfirst($item->media->tipe ?? '') }}</span>
+                            </div>
                         </div>
                     </td>
 
-                    <td style="min-width: 200px;">
-                        <div>{{ $item->judul }}</div>
-                        <div class="small text-muted">
-                            {{ $item->no_invoice }}
-                            @if ($item->plan)
-                                &middot; Kuota {{ $item->plan->label_periode }}
-                            @endif
+                    <td data-label="Judul" style="min-width: 200px;">
+                        <div class="cell">
+                            <div>{{ $item->judul }}</div>
+                            <div class="small text-muted">
+                                {{ $item->no_invoice }}
+                                @if ($item->plan)
+                                    &middot; Kuota {{ $item->plan->label_periode }}
+                                @endif
+                            </div>
                         </div>
                     </td>
 
-                    <td class="small text-nowrap">
-                        <div><span class="text-muted">Tayang</span> {{ $item->waktu_tayang->format('d M Y') }}</div>
-                        <div><span class="text-muted">Kwitansi</span> {{ $item->tanggal_kwitansi->format('d M Y') }}</div>
+                    <td data-label="Tanggal" class="small text-nowrap">
+                        <div class="cell">
+                            <div><span class="text-muted">Tayang</span> {{ $item->waktu_tayang->format('d M Y') }}</div>
+                            <div><span class="text-muted">Kwitansi</span> {{ $item->tanggal_kwitansi->format('d M Y') }}</div>
+                        </div>
                     </td>
 
-                    <td class="text-nowrap">
-                        @if ($item->status === 'sudah_dibayar')
-                            <div class="small fw-semibold text-success"><i class="bi bi-check-circle-fill"></i> Dibayar</div>
-                            <div class="small text-muted">{{ $item->tanggal_dibayar?->format('d M Y') ?? '-' }}</div>
-                        @elseif ($item->tanggal_jatuh_tempo)
-                            <div class="small">Tenggat {{ $item->tanggal_jatuh_tempo->format('d M Y') }}</div>
-                            @if ($umur < 0)
-                                <div class="small text-danger fw-semibold">Terlambat {{ abs($umur) }} hari</div>
-                            @elseif ($umur === 0)
-                                <div class="small fw-semibold" style="color: #b45309;">Jatuh tempo hari ini</div>
+                    <td data-label="Pembayaran" class="text-nowrap">
+                        <div class="cell">
+                            @if ($item->status === 'sudah_dibayar')
+                                <div class="small fw-semibold text-success"><i class="bi bi-check-circle-fill"></i> Dibayar</div>
+                                <div class="small text-muted">{{ $item->tanggal_dibayar?->format('d M Y') ?? '-' }}</div>
+                            @elseif ($item->tanggal_jatuh_tempo)
+                                <div class="small">Tenggat {{ $item->tanggal_jatuh_tempo->format('d M Y') }}</div>
+                                @if ($umur < 0)
+                                    <div class="small text-danger fw-semibold">Terlambat {{ abs($umur) }} hari</div>
+                                @elseif ($umur === 0)
+                                    <div class="small fw-semibold" style="color: #b45309;">Jatuh tempo hari ini</div>
+                                @else
+                                    <div class="small text-muted">{{ $umur }} hari lagi</div>
+                                @endif
                             @else
-                                <div class="small text-muted">{{ $umur }} hari lagi</div>
+                                <span class="text-muted">-</span>
                             @endif
-                        @else
-                            <span class="text-muted">-</span>
-                        @endif
+                        </div>
                     </td>
 
-                    <td class="fw-semibold text-nowrap">Rp {{ number_format($item->nominal, 0, ',', '.') }}</td>
-
-                    <td>
-                        @if ($item->status === 'sudah_dibayar')
-                            <span class="badge-status badge-sudah">Sudah Dibayar</span>
-                        @elseif ($item->status === 'jatuh_tempo')
-                            <span class="badge-status badge-jatuh">Jatuh Tempo</span>
-                        @else
-                            <span class="badge-status badge-belum">Belum Dibayar</span>
-                        @endif
+                    <td data-label="Nominal" class="fw-semibold text-nowrap">
+                        <div class="cell">Rp {{ number_format($item->nominal, 0, ',', '.') }}</div>
                     </td>
 
-                    <td class="text-nowrap">
-                        @if ($item->file_kwitansi)
-                            <a href="{{ asset('storage/' . $item->file_kwitansi) }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Lihat kwitansi">
-                                <i class="bi bi-paperclip"></i>
+                    <td data-label="Status">
+                        <div class="cell">
+                            @if ($item->status === 'sudah_dibayar')
+                                <span class="badge-status badge-sudah">Sudah Dibayar</span>
+                            @elseif ($item->status === 'jatuh_tempo')
+                                <span class="badge-status badge-jatuh">Jatuh Tempo</span>
+                            @else
+                                <span class="badge-status badge-belum">Belum Dibayar</span>
+                            @endif
+                        </div>
+                    </td>
+
+                    <td data-label="Aksi" class="text-nowrap">
+                        <div class="cell">
+                            @if ($item->file_kwitansi)
+                                <a href="{{ asset('storage/' . $item->file_kwitansi) }}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Lihat kwitansi">
+                                    <i class="bi bi-paperclip"></i>
+                                </a>
+                            @endif
+                            <a href="{{ route('advertorials.edit', $item) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                <i class="bi bi-pencil"></i>
                             </a>
-                        @endif
-                        <a href="{{ route('advertorials.edit', $item) }}" class="btn btn-sm btn-outline-primary" title="Edit">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <form action="{{ route('advertorials.destroy', $item) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus data ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
+                            <form action="{{ route('advertorials.destroy', $item) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus data ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             @empty

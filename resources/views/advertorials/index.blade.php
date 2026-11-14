@@ -45,7 +45,7 @@
     @if ($quotaSummary->isNotEmpty())
         <h6 class="fw-bold mb-2">Kuota {{ now()->translatedFormat('F Y') }}</h6>
         <div class="table-responsive mb-4">
-            <table class="table table-custom align-middle">
+            <table class="table table-custom table-stack align-middle">
                 <thead>
                     <tr>
                         <th>Perusahaan</th>
@@ -59,21 +59,25 @@
                 <tbody>
                     @foreach ($quotaSummary as $plan)
                         <tr>
-                            <td class="fw-semibold">{{ $plan->company->nama_perusahaan ?? '-' }}</td>
-                            <td>{{ $plan->media->nama_media ?? '-' }}</td>
-                            <td class="text-success fw-bold">{{ $plan->sisa_kuota }}</td>
-                            <td class="text-danger fw-bold">{{ $plan->realisasi }}</td>
-                            <td>
-                                <div class="progress" style="height: 8px;">
-                                    <div class="progress-bar {{ $plan->persentase >= 100 ? 'bg-success' : '' }}"
-                                         style="width: {{ $plan->persentase }}%; background-color: {{ $plan->persentase >= 100 ? '' : '#3182ce' }};"></div>
+                            <td data-label="Perusahaan" class="fw-semibold"><div class="cell">{{ $plan->company->nama_perusahaan ?? '-' }}</div></td>
+                            <td data-label="Media"><div class="cell">{{ $plan->media->nama_media ?? '-' }}</div></td>
+                            <td data-label="Kuota" class="text-success fw-bold"><div class="cell">{{ $plan->sisa_kuota }}</div></td>
+                            <td data-label="Realisasi" class="text-danger fw-bold"><div class="cell">{{ $plan->realisasi }}</div></td>
+                            <td data-label="Progress">
+                                <div class="cell" style="min-width: 120px;">
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar {{ $plan->persentase >= 100 ? 'bg-success' : '' }}"
+                                             style="width: {{ $plan->persentase }}%; background-color: {{ $plan->persentase >= 100 ? '' : '#3182ce' }};"></div>
+                                    </div>
+                                    <small class="text-muted">{{ $plan->persentase }}%</small>
                                 </div>
-                                <small class="text-muted">{{ $plan->persentase }}%</small>
                             </td>
-                            <td>
-                                <a href="{{ route('advertorials.index', ['plan_id' => $plan->id]) }}" class="btn btn-sm btn-outline-secondary" title="Lihat tayangan">
-                                    <i class="bi bi-list-ul"></i>
-                                </a>
+                            <td data-label="Aksi">
+                                <div class="cell">
+                                    <a href="{{ route('advertorials.index', ['plan_id' => $plan->id]) }}" class="btn btn-sm btn-outline-secondary" title="Lihat tayangan">
+                                        <i class="bi bi-list-ul"></i> <span class="d-md-none">Lihat tayangan</span>
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     @endforeach

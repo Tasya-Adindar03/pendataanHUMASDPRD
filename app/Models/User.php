@@ -15,6 +15,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'foto',
     ];
 
     protected $hidden = [
@@ -34,5 +35,17 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
+    }
+
+    // Alamat foto profil (null kalau belum punya foto)
+    public function getFotoUrlAttribute(): ?string
+    {
+        return $this->foto ? asset('storage/' . $this->foto) : null;
+    }
+
+    // Huruf pertama nama, dipakai kalau belum punya foto
+    public function getInisialAttribute(): string
+    {
+        return strtoupper(mb_substr($this->name, 0, 1));
     }
 }

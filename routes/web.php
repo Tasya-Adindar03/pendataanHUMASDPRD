@@ -8,6 +8,7 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfileController; // <-- Jangan lupa import controller-nya jika sudah ada
 use App\Http\Middleware\AdminOnly;
 use App\Http\Middleware\SyncOverdueStatus;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,16 @@ Route::middleware(['auth', SyncOverdueStatus::class])->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // ==========================================
+    // TAMBAHKAN ROUTE PROFILE DI SINI
+    // ==========================================
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
+        Route::put('/update', [ProfileController::class, 'update'])->name('update');
+        // Tambahkan route password jika dibutuhkan (opsional)
+        // Route::put('/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+    });
 
     Route::prefix('advertorials')->name('advertorials.')->group(function () {
         Route::get('/', [AdvertorialController::class, 'index'])->name('index');
