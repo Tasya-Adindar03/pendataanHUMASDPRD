@@ -400,8 +400,8 @@
             <a class="side-link {{ request()->routeIs('companies.*') ? 'active' : '' }}" href="{{ route('companies.index') }}" title="Kelola Perusahaan">
                 <i class="bi bi-building"></i><span class="side-text">Kelola Perusahaan</span>
             </a>
-            <a class="side-link {{ request()->routeIs('media.*') ? 'active' : '' }}" href="{{ route('media.index') }}" title="Kelola Media & Kuota">
-                <i class="bi bi-collection"></i><span class="side-text">Kelola Media &amp; Kuota</span>
+            <a class="side-link {{ request()->routeIs('kuota.*') ? 'active' : '' }}" href="{{ route('kuota.index') }}" title="Kelola Kuota Planning">
+                <i class="bi bi-clipboard-data"></i><span class="side-text">Kelola Kuota Planning</span>
             </a>
 
             @if ($me->isAdmin())

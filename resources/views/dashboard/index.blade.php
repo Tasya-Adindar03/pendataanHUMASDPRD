@@ -4,6 +4,8 @@
 
 @section('content')
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+
     <style>
         /* ===== Pemilih periode ===== */
         .period-bar { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; margin-bottom: 1.25rem; }
@@ -20,18 +22,73 @@
         .period-note { color: var(--muted); font-size: .8rem; }
 
         .period-menu {
-            border: 0; background: var(--card-bg); border-radius: 18px; overflow: hidden;
-            box-shadow: 0 16px 40px rgba(0,0,0,.25); width: min(520px, calc(100vw - 2rem)); margin-top: 10px !important;
+            border: 0; background: var(--card-bg); border-radius: 18px; overflow-x: hidden; overflow-y: auto;
+            box-shadow: 0 16px 40px rgba(0,0,0,.25); width: min(580px, calc(100vw - 2rem)); max-height: 85vh;
+            margin-top: 10px !important;
         }
-        .period-grid { display: grid; grid-template-columns: 1fr 1fr; }
+        .period-grid { display: grid; grid-template-columns: 185px 1fr; }
         .period-presets { padding: .6rem; border-right: 1px solid var(--line-soft); }
+        .period-title { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; padding: .35rem .8rem; }
         .period-item {
-            display: block; padding: .55rem .8rem; border-radius: 12px; color: var(--text);
+            display: block; padding: .5rem .8rem; border-radius: 12px; color: var(--text);
             text-decoration: none; font-size: .88rem; font-weight: 500; transition: background .15s;
         }
         .period-item:hover { background: var(--surface-2); color: var(--text); }
         .period-item.active { background: var(--primary); color: #fff; }
-        .period-custom { padding: 1rem; }
+        .period-custom { padding: .6rem 1rem 1rem; min-width: 0; }
+
+        .cal-foot { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: .75rem; padding-top: .75rem; border-top: 1px solid var(--line-soft); }
+        .cal-summary { font-size: .8rem; color: var(--muted); min-width: 0; }
+        .cal-summary strong { color: var(--text); }
+
+        /* ===== Kalender (gaya mengikuti tema) ===== */
+        .cal-wrap .flatpickr-calendar { width: 100%; max-width: 100%; background: transparent; box-shadow: none; border: 0; }
+        .cal-wrap .flatpickr-innerContainer,
+        .cal-wrap .flatpickr-rContainer,
+        .cal-wrap .flatpickr-days,
+        .cal-wrap .flatpickr-weekdays,
+        .cal-wrap .flatpickr-weekdaycontainer,
+        .cal-wrap .dayContainer { width: 100%; min-width: 100%; max-width: 100%; }
+
+        .cal-wrap span.flatpickr-weekday { color: var(--muted); font-weight: 600; font-size: .72rem; background: transparent; }
+        .cal-wrap .flatpickr-months .flatpickr-month,
+        .cal-wrap .flatpickr-current-month { color: var(--text); fill: var(--text); background: transparent; }
+        .cal-wrap .flatpickr-current-month .flatpickr-monthDropdown-months,
+        .cal-wrap .flatpickr-current-month input.cur-year { color: var(--text); font-weight: 600; }
+        .cal-wrap .flatpickr-monthDropdown-months .flatpickr-monthDropdown-month { background: var(--card-bg); color: var(--text); }
+        .cal-wrap .flatpickr-months .flatpickr-prev-month,
+        .cal-wrap .flatpickr-months .flatpickr-next-month { color: var(--text); fill: var(--text); }
+        .cal-wrap .flatpickr-months .flatpickr-prev-month svg,
+        .cal-wrap .flatpickr-months .flatpickr-next-month svg { fill: var(--text); }
+        .cal-wrap .flatpickr-months .flatpickr-prev-month:hover svg,
+        .cal-wrap .flatpickr-months .flatpickr-next-month:hover svg { fill: var(--accent); }
+
+        .cal-wrap .flatpickr-day { max-width: none; height: 38px; line-height: 36px; border-radius: 10px; border-color: transparent; color: var(--text); }
+        .cal-wrap .flatpickr-day:hover,
+        .cal-wrap .flatpickr-day:focus { background: var(--surface-2); border-color: transparent; }
+        .cal-wrap .flatpickr-day.prevMonthDay,
+        .cal-wrap .flatpickr-day.nextMonthDay { color: var(--muted); opacity: .55; }
+        .cal-wrap .flatpickr-day.today { border-color: var(--accent); }
+        .cal-wrap .flatpickr-day.today:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+        .cal-wrap .flatpickr-day.inRange {
+            background: rgba(49,130,206,.16); border-color: transparent; border-radius: 0; color: var(--text);
+            box-shadow: -5px 0 0 rgba(49,130,206,.16), 5px 0 0 rgba(49,130,206,.16);
+        }
+        .cal-wrap .flatpickr-day.selected,
+        .cal-wrap .flatpickr-day.startRange,
+        .cal-wrap .flatpickr-day.endRange,
+        .cal-wrap .flatpickr-day.selected:hover,
+        .cal-wrap .flatpickr-day.startRange:hover,
+        .cal-wrap .flatpickr-day.endRange:hover {
+            background: var(--primary); border-color: var(--primary); color: #fff; box-shadow: none;
+        }
+        .cal-wrap .flatpickr-day.startRange { border-radius: 10px 0 0 10px; }
+        .cal-wrap .flatpickr-day.endRange { border-radius: 0 10px 10px 0; }
+        .cal-wrap .flatpickr-day.startRange.endRange { border-radius: 10px; }
+        .cal-wrap .flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n+1)),
+        .cal-wrap .flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n+1)),
+        .cal-wrap .flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n+1)) { box-shadow: -10px 0 0 var(--primary); }
 
         /* ===== Kartu angka ===== */
         .kpi-tile { display: flex; align-items: center; gap: 14px; padding: 1.1rem 1.25rem; height: 100%; }
@@ -75,6 +132,7 @@
             .period-note { flex: 1 1 100%; }
             .period-grid { grid-template-columns: 1fr; }
             .period-presets { border-right: 0; border-bottom: 1px solid var(--line-soft); display: grid; grid-template-columns: 1fr 1fr; }
+            .period-presets .period-title { grid-column: 1 / -1; }
 
             .kpi-tile { padding: .85rem; gap: 10px; }
             .kpi-icon { width: 38px; height: 38px; font-size: 1.05rem; }
@@ -122,6 +180,7 @@
             <div class="dropdown-menu period-menu p-0">
                 <div class="period-grid">
                     <div class="period-presets">
+                        <div class="period-title">Pilih cepat</div>
                         @foreach ($presets as $key => $name)
                             <a href="{{ route('dashboard', ['periode' => $key]) }}" class="period-item {{ $periode === $key ? 'active' : '' }}">{{ $name }}</a>
                         @endforeach
@@ -129,15 +188,19 @@
 
                     <form action="{{ route('dashboard') }}" method="GET" class="period-custom">
                         <input type="hidden" name="periode" value="custom">
-                        <div class="fw-bold small mb-3"><i class="bi bi-calendar-range"></i> Rentang kustom</div>
+                        <input type="hidden" name="dari" id="dariInput" value="{{ $dariInput }}">
+                        <input type="hidden" name="sampai" id="sampaiInput" value="{{ $sampaiInput }}">
 
-                        <label class="form-label small">Dari tanggal</label>
-                        <input type="date" name="dari" class="form-control form-control-sm mb-2" value="{{ $dariInput }}" required>
+                        <div class="period-title" style="padding-left: 0;"><i class="bi bi-calendar-range"></i> Atau pilih di kalender</div>
 
-                        <label class="form-label small">Sampai tanggal</label>
-                        <input type="date" name="sampai" class="form-control form-control-sm" value="{{ $sampaiInput }}" required>
+                        <div class="cal-wrap">
+                            <input type="text" id="rangeCal" class="d-none" tabindex="-1">
+                        </div>
 
-                        <button type="submit" class="btn btn-sm btn-primary-custom w-100 mt-3">Terapkan</button>
+                        <div class="cal-foot">
+                            <div class="cal-summary" id="calSummary">Klik tanggal awal, lalu tanggal akhir</div>
+                            <button type="submit" class="btn btn-sm btn-primary-custom" id="calApply" disabled>Terapkan</button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -386,6 +449,8 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/id.js"></script>
 <script>
     const urlAdvertorials = "{{ route('advertorials.index') }}";
     const rangeParams = @json($rangeParams);
@@ -542,5 +607,62 @@
         link.download = canvasId + '.png';
         link.click();
     }
+
+    // ===== Kalender pemilih rentang tanggal =====
+    (function () {
+        const el = document.getElementById('rangeCal');
+        if (!el || typeof flatpickr === 'undefined') return;
+
+        const dariInput = document.getElementById('dariInput');
+        const sampaiInput = document.getElementById('sampaiInput');
+        const applyBtn = document.getElementById('calApply');
+        const summary = document.getElementById('calSummary');
+        const defaultHint = 'Klik tanggal awal, lalu tanggal akhir';
+
+        const fmt = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+        const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+
+        function sync(dates) {
+            if (!dates.length) {
+                dariInput.value = '';
+                sampaiInput.value = '';
+                applyBtn.disabled = true;
+                summary.textContent = defaultHint;
+                return;
+            }
+
+            const a = dates[0];
+            const b = dates[1] || dates[0];
+            const days = Math.round((b - a) / 86400000) + 1;
+
+            dariInput.value = iso(a);
+            sampaiInput.value = iso(b);
+            applyBtn.disabled = false;
+
+            if (dates.length === 2) {
+                summary.innerHTML = '<strong>' + fmt.format(a) + (days > 1 ? ' – ' + fmt.format(b) : '') + '</strong> &middot; ' + days + ' hari';
+            } else {
+                summary.innerHTML = '<strong>' + fmt.format(a) + '</strong> &middot; pilih tanggal akhir, atau klik Terapkan untuk 1 hari';
+            }
+        }
+
+        const initial = [@if ($dariInput && $sampaiInput)"{{ $dariInput }}", "{{ $sampaiInput }}"@endif];
+
+        const fp = flatpickr(el, {
+            inline: true,
+            mode: 'range',
+            locale: 'id',
+            dateFormat: 'Y-m-d',
+            showMonths: 1,
+            defaultDate: initial.length ? initial : null,
+            onChange: function (dates) { sync(dates); }
+        });
+
+        sync(fp.selectedDates);
+
+        // Klik di dalam kalender tidak boleh menutup menu periode
+        const wrap = el.closest('.cal-wrap');
+        wrap.addEventListener('click', function (e) { e.stopPropagation(); });
+    })();
 </script>
 @endpush
